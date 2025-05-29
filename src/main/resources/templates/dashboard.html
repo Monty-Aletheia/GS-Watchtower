@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>The Watchtower</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: #f4f6f8;
+            color: #333;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .sidebar nav a {
+            color: #ecf0f1;
+            text-decoration: none;
+            margin: 10px 0;
+            display: block;
+            padding: 10px;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .sidebar nav a:hover {
+            background-color: #34495e;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        #map {
+            height: 500px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div>
+        <h2>Dashboard</h2>
+        <img th:src="${photo}" style="border-radius: 20px" width="100px" height="100px" alt="">
+        <nav>
+            <a href="#">Mapa</a>
+            <a href="#">Relatórios</a>
+            <a href="#">Configurações</a>
+        </nav>
+    </div>
+    <div>
+        <p>Versão 1.0</p>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="header">Bem-vindo, <span th:text="${name}"></span></div>
+
+    <div class="card">
+        <div th:text="${pontos}" style="display:none;"></div>
+        <div id="map"></div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script th:inline="javascript">
+    const pontos = /*[[${pontos}]]*/ '[]';
+    const data = JSON.parse(pontos);
+    console.log('data:', data);
+    console.log('pontos:', pontos);
+
+    var brasilBounds = [
+        [-34.0, -74.0], // sudoeste
+        [5.5, -34.0]    // nordeste
+    ];
+
+    var map = L.map('map', {
+        maxBounds: brasilBounds,
+        maxBoundsViscosity: 1.0,
+        minZoom: 4,   // zoom mínimo permitido (mais afastado)
+        maxZoom: 20,  // zoom máximo permitido (mais próximo)
+    }).setView([-14.2350, -51.9253], 4);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap & CartoDB'
+    }).addTo(map);
+
+    data.forEach(p => {
+        L.marker([p.lat, p.lon]).addTo(map)
+            .bindPopup(p.nome);
+    });
+
+    map.on('click', function(e) {
+        const lat = e.latlng.lat;
+        const lon = e.latlng.lng;
+
+        const marker = L.marker([lat, lon], { draggable: true }).addTo(map).bindPopup('Clique para remover').openPopup();
+
+        // Quando clicar no marcador, ele é removido
+        marker.on('click', function() {
+            map.removeLayer(marker);
+        });
+    });
+</script>
+
+</body>
+</html>
