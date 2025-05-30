@@ -11,17 +11,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.authorizeHttpRequests(r -> {
-                    r.requestMatchers("/").permitAll();
+                    r.requestMatchers("/", "/login", "/css/**", "/js/**").permitAll();
                     r.anyRequest().authenticated();
                 })
+                .formLogin(formLogin -> formLogin.loginPage("/login").permitAll())
                 .oauth2Login(oauth2 -> {
                     oauth2.successHandler(
                             (request,
                              response,
-                             authentication) -> response.sendRedirect("/tester")
+                             authentication) -> response.sendRedirect("/dashboard")
                     );
                 })
-                .formLogin(Customizer.withDefaults())
                 .build();
     }
 }
