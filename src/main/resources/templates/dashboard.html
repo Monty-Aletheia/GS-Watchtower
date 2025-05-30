@@ -4,8 +4,11 @@
 <head>
     <title>The Watchtower</title>
     <meta charset="utf-8">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <link rel="icon" href="/favicon.png" type="image/png">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -16,19 +19,23 @@
         body {
             display: flex;
             min-height: 100vh;
-            background-color: #f4f6f8;
+            background-color: #f9f9f9; /* Fundo neutro */
             color: #333;
         }
 
         .sidebar {
             width: 250px;
-            background-color: #2c3e50;
+            height: 100vh;
+            top: 0;
+            background: linear-gradient(135deg, #FF3D2E, #FF6F3D, #FF9440);
             color: white;
             padding: 20px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            position: sticky;
         }
+
 
         .sidebar h2 {
             margin-bottom: 20px;
@@ -37,17 +44,19 @@
         }
 
         .sidebar nav a {
-            color: #ecf0f1;
+            color: black;
             text-decoration: none;
             margin: 10px 0;
             display: block;
+            font-weight: bold;
             padding: 10px;
             border-radius: 8px;
-            transition: background 0.3s;
+            transition: background 0.3s, transform 0.2s;
         }
 
         .sidebar nav a:hover {
-            background-color: #34495e;
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
         }
 
         .main-content {
@@ -61,13 +70,14 @@
             font-size: 28px;
             font-weight: bold;
             margin-bottom: 20px;
+            color: #FF3D2E;
         }
 
         .card {
             background: white;
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(255, 61, 46, 0.15);
             margin-bottom: 20px;
         }
 
@@ -75,22 +85,30 @@
             height: 500px;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
+
+        .logo {
+            width: 14vw;
+            max-width: 240px;
+        }
+
     </style>
 </head>
 <body>
 
 <div class="sidebar">
+
     <div>
-        <h2>Dashboard</h2>
-        <img th:src="${photo}" style="border-radius: 20px" width="100px" height="100px" alt="">
+        <img class="logo" src="/logo-no-background.png" alt="Watchtower">
+
         <nav>
-            <a href="#">Mapa</a>
-            <a href="#">Relatórios</a>
-            <a href="#">Configurações</a>
+            <a class="menu-item" href="#">Mapa</a>
+            <a class="menu-item" href="#">Relatórios</a>
+            <a class="menu-item" href="#">Configurações</a>
         </nav>
     </div>
+
     <div>
         <p>Versão 1.0</p>
     </div>
@@ -105,23 +123,23 @@
     </div>
 </div>
 
+
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script th:inline="javascript">
     const pontos = /*[[${pontos}]]*/ '[]';
     const data = JSON.parse(pontos);
     console.log('data:', data);
-    console.log('pontos:', pontos);
 
     var brasilBounds = [
-        [-34.0, -74.0], // sudoeste
-        [5.5, -34.0]    // nordeste
+        [-34.0, -74.0],
+        [5.5, -34.0]
     ];
 
     var map = L.map('map', {
         maxBounds: brasilBounds,
         maxBoundsViscosity: 1.0,
-        minZoom: 4,   // zoom mínimo permitido (mais afastado)
-        maxZoom: 20,  // zoom máximo permitido (mais próximo)
+        minZoom: 4,
+        maxZoom: 20
     }).setView([-14.2350, -51.9253], 4);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -133,14 +151,13 @@
             .bindPopup(p.nome);
     });
 
-    map.on('click', function(e) {
+    map.on('click', function (e) {
         const lat = e.latlng.lat;
         const lon = e.latlng.lng;
 
-        const marker = L.marker([lat, lon], { draggable: true }).addTo(map).bindPopup('Clique para remover').openPopup();
+        const marker = L.marker([lat, lon], {draggable: true}).addTo(map).bindPopup('Clique para remover').openPopup();
 
-        // Quando clicar no marcador, ele é removido
-        marker.on('click', function() {
+        marker.on('click', function () {
             map.removeLayer(marker);
         });
     });
