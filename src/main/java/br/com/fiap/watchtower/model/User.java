@@ -6,12 +6,14 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
+
 @Entity
-@Table(name = "tb_user")
+@Table(name = "t_wt_users")
 public class User implements UserDetails {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
     private String name;
     private String email;
     private String password;
@@ -21,6 +23,8 @@ public class User implements UserDetails {
         this.email = email;
         this.password = password;
     }
+
+    public User() {}
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -34,7 +38,7 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.name;
+        return email;
     }
 
     public String getName() {
@@ -55,5 +59,13 @@ public class User implements UserDetails {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
     }
 }

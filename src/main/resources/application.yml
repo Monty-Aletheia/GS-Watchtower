@@ -8,3 +8,50 @@ spring:
             google:
               client-id:
               client-secret:
+    datasource:
+      url: jdbc:oracle:thin:@oracle.fiap.com.br:1521:orcl
+      username: rm552626 #rm553912 #rm553873 #rm552626
+      password: 080305 #141204 #110804 #080305
+      driver-class-name: oracle.jdbc.OracleDriver
+      hikari:
+        minimum-idle: 1
+        maximum-pool-size: 10
+        idle-timeout: 300000 # 5 minutos
+        max-lifetime: 1800000 # 30 minutos
+        connection-timeout: 20000 # 10 segundos para obter uma conexão
+        validation-timeout: 5000 # Tempo de validação
+        leak-detection-threshold: 0 # Desativado para produção
+        keepalive-time: 30000 # Mantém a conexão ativa
+    jpa:
+      show-sql: false
+      properties:
+        hibernate:
+          format_sql: true
+    flyway:
+      baseline-on-migrate: true
+    # Configuração do RabbitMQ
+    rabbitmq:
+      host: localhost
+      port: 5672
+      username: guest
+      password: guest
+      listener:
+        simple:
+          retry:
+            enabled: true
+            initial-interval: 2000
+            max-attempts: 3
+            multiplier: 1.5
+      # Porta do painel de administração do RabbitMQ
+    # Configuração do Spring AI
+    ai:
+      openai:
+        api-key:
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+        amqp: INFO # Log level para RabbitMQ
+        ai: DEBUG # Log level para Spring AI

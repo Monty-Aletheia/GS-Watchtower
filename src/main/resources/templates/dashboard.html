@@ -5,7 +5,7 @@
     <title>The Watchtower</title>
     <meta charset="utf-8">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-    <link rel="icon" href="/favicon.png" type="image/png">
+    <link rel="icon" href="/images/favicon.png" type="image/png">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
@@ -52,9 +52,32 @@
             padding: 10px;
             border-radius: 8px;
             transition: background 0.3s, transform 0.2s;
+            width: 100%;
+            text-align: left;
         }
 
         .sidebar nav a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        .logout-btn {
+            color: black;
+            text-decoration: none;
+            margin: 10px 0;
+            display: block;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 8px;
+            transition: background 0.3s, transform 0.2s;
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
             background-color: rgba(255, 255, 255, 0.2);
             transform: translateX(5px);
         }
@@ -100,12 +123,19 @@
 <div class="sidebar">
 
     <div>
-        <img class="logo" src="/logo-no-background.png" alt="Watchtower">
+        <img class="logo" src="/images/logo-no-background.png" alt="Watchtower">
 
         <nav>
             <a class="menu-item" href="#">Mapa</a>
             <a class="menu-item" href="#">Relatórios</a>
             <a class="menu-item" href="#">Configurações</a>
+            <form th:action="@{/logout}" method="post" style="margin: 10px 0;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button type="submit" class="logout-btn">
+                    Sair
+                </button>
+            </form>
+
         </nav>
     </div>
 
@@ -125,6 +155,8 @@
 
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 <script th:inline="javascript">
     const pontos = /*[[${pontos}]]*/ '[]';
     const data = JSON.parse(pontos);
@@ -146,16 +178,129 @@
         attribution: '&copy; OpenStreetMap & CartoDB'
     }).addTo(map);
 
-    data.forEach(p => {
-        L.marker([p.lat, p.lon]).addTo(map)
-            .bindPopup(p.nome);
+    // Criar ícones personalizados para cada nível de risco
+    const icons = {
+        LOW: L.icon({
+            iconUrl: '/images/risk-marker.png',
+            iconSize: [24, 32],
+            iconAnchor: [12, 32],
+            popupAnchor: [0, -32]
+        }),
+        MEDIUM: L.icon({
+            iconUrl: '/images/risk-marker.png',
+            iconSize: [24, 32],
+            iconAnchor: [12, 32],
+            popupAnchor: [0, -32]
+        }),
+        HIGH: L.icon({
+            iconUrl: '/images/risk-marker.png',
+            iconSize: [24, 32],
+            iconAnchor: [12, 32],
+            popupAnchor: [0, -32]
+        }),
+        CRITICAL: L.icon({
+            iconUrl: '/images/risk-marker.png',
+            iconSize: [24, 32],
+            iconAnchor: [12, 32],
+            popupAnchor: [0, -32]
+        })
+    };
+
+    // Função para criar o conteúdo do popup
+    function createPopupContent(point) {
+        return `
+            <div style="min-width: 200px;">
+                <h3 style="margin: 0 0 10px; color: #FF3D2E;">${point.description || 'Sem descrição'}</h3>
+                <p><strong>Nível de Risco:</strong> ${point.riskLevel || 'MEDIUM'}</p>
+                <p><strong>Análise:</strong></p>
+                <p style="white-space: pre-wrap;">${point.aiAnalysis || 'Análise pendente...'}</p>
+                ${point.timestamp ? `<p><strong>Data:</strong> ${new Date(point.timestamp).toLocaleString()}</p>` : ''}
+            </div>
+        `;
+    }
+
+    // Função para adicionar um marcador ao mapa
+    function addMarker(point) {
+        console.log('Tentando adicionar marcador com dados:', point);
+        
+        // Validar se as coordenadas existem e são números
+        if (!point || typeof point.latitude !== 'number' || typeof point.longitude !== 'number') {
+            console.error('Coordenadas inválidas:', point);
+            return;
+        }
+
+        // Usar ícone padrão (MEDIUM) se não houver riskLevel definido
+        const riskLevel = point.riskLevel || 'MEDIUM';
+        const icon = icons[riskLevel] || icons.MEDIUM;
+        console.log('Usando ícone para nível:', riskLevel);
+        
+        try {
+            const marker = L.marker([point.latitude, point.longitude], {icon: icon})
+                .addTo(map)
+                .bindPopup(createPopupContent(point));
+            
+            console.log('Marcador adicionado com sucesso');
+            return marker;
+        } catch (error) {
+            console.error('Erro ao adicionar marcador:', error);
+        }
+    }
+
+    // Adicionar marcadores existentes
+    console.log('Dados iniciais:', data);
+    data.forEach(point => {
+        try {
+            addMarker(point);
+        } catch (error) {
+            console.error('Erro ao adicionar marcador inicial:', error);
+        }
+    });
+
+    // Conectar ao WebSocket
+    const socket = new SockJS('/ws-risk-points');
+    const stompClient = Stomp.over(socket);
+
+    // Configurar callbacks de debug
+    socket.onopen = function() {
+        console.log('SockJS: Conexão aberta');
+    };
+    socket.onclose = function() {
+        console.log('SockJS: Conexão fechada');
+    };
+    socket.onerror = function(error) {
+        console.error('SockJS: Erro na conexão', error);
+    };
+
+    // Habilitar logs do STOMP
+    stompClient.debug = function(str) {
+        console.log('STOMP: ', str);
+    };
+
+    stompClient.connect({}, function(frame) {
+        console.log('STOMP: Conectado ao WebSocket', frame);
+        
+        stompClient.subscribe('/topic/risk-points', function(message) {
+            console.log('STOMP: Mensagem recebida raw:', message.body);
+            try {
+                const point = JSON.parse(message.body);
+                console.log('STOMP: Ponto de risco parseado:', point);
+                addMarker(point);
+            } catch (error) {
+                console.error('Erro ao processar mensagem:', error);
+            }
+        });
+    }, function(error) {
+        console.error('STOMP: Erro na conexão', error);
     });
 
     map.on('click', function (e) {
         const lat = e.latlng.lat;
         const lon = e.latlng.lng;
 
-        const marker = L.marker([lat, lon], {draggable: true}).addTo(map).bindPopup('Clique para remover').openPopup();
+        const marker = L.marker([lat, lon], {
+            draggable: true,
+            icon: icons.MEDIUM
+        }).addTo(map).bindPopup('Clique para remover').openPopup();
 
         marker.on('click', function () {
             map.removeLayer(marker);

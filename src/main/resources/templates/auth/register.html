@@ -1,47 +1,164 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Cadastro</title>
-    <link rel="stylesheet" href="/css/styles.css"> <!-- Estilos personalizados -->
+    <title>The WatchTower - Cadastro</title>
+    <link rel="icon" href="/images/favicon.png" type="image/png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body, html {
+            height: 100%;
+            background-color: #fff;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .image-side {
+            flex: 1;
+            background: url('/images/logo.png') no-repeat center;
+            background-size: contain;
+            margin-left: 4vw;
+        }
+
+        .form-side {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .form-card {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-card h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #FF3D2E;
+        }
+
+        .google-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            background: white;
+            transition: background 0.3s;
+        }
+
+        .google-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .separator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .separator::before, .separator::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #ccc;
+        }
+
+        input {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            width: 100%;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            border-color: #FF3D2E;
+            outline: none;
+        }
+
+        .submit-btn {
+            padding: 12px;
+            background: linear-gradient(135deg, #FF3D2E, #FF6F3D, #FF9440);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+
+        .login-link {
+            font-size: 14px;
+            color: #555;
+            text-align: center;
+        }
+
+        .login-link a {
+            color: #FF3D2E;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+    </style>
 </head>
 <body>
+
 <div class="container">
-    <h1>Cadastro</h1>
+    <div class="image-side"></div>
 
-    <!-- Formulário de Cadastro -->
-    <form th:action="@{/signup}" method="post">
-        <div>
-            <label for="username">Nome de Usuário:</label>
-            <input type="text" id="username" name="username" required th:value="${user.username}" />
-        </div>
+    <div class="form-side">
+        <form class="form-card" th:action="@{/register}" method="post" th:object="${user}">
+            <h1>Crie sua conta</h1>
 
-        <div>
-            <label for="email">E-mail:</label>
-            <input type="email" id="email" name="email" required th:value="${user.email}" />
-        </div>
+            <a th:href="@{/oauth2/authorization/google}" class="google-btn">
+                <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" alt="Google" width="20">
+                Inscreva-se com Google
+            </a>
 
-        <div>
-            <label for="password">Senha:</label>
-            <input type="password" id="password" name="password" required />
-        </div>
+            <div class="separator">ou</div>
 
-        <div>
-            <label for="confirmPassword">Confirmar Senha:</label>
-            <input type="password" id="confirmPassword" name="confirmPassword" required />
-        </div>
+            <input type="text" name="name" th:field="*{name}" placeholder="Nome" required>
+            <input type="email" name="email" th:field="*{email}" placeholder="E-mail" required>
+            <input type="password" name="password" th:field="*{password}" placeholder="Senha" required>
 
-        <div>
-            <button type="submit">Cadastrar</button>
-        </div>
-    </form>
+            <button type="submit" class="submit-btn">Cadastrar</button>
 
-    <div>
-        <p>Já tem uma conta? <a href="/login">Faça login aqui</a>.</p>
+            <p class="login-link">Já tem uma conta? <a href="/login">Entrar</a></p>
+        </form>
     </div>
 </div>
 
-<!-- Scripts -->
-<script src="/js/scripts.js"></script>
 </body>
 </html>

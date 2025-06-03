@@ -1,25 +1,164 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Login</title>
+    <meta charset="UTF-8">
+    <title>The WatchTower - Login</title>
+    <link rel="icon" href="/images/favicon.png" type="image/png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body, html {
+            height: 100%;
+            background-color: #fff;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .image-side {
+            flex: 1;
+            background: url('/images/logo.png') no-repeat center;
+            background-size: contain;
+            margin-left: 4vw;
+        }
+
+        .form-side {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .form-card {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-card h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #FF3D2E;
+        }
+
+        .google-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            background: white;
+            transition: background 0.3s;
+            text-decoration: none;
+            color: #333;
+        }
+
+        .google-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .separator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .separator::before, .separator::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #ccc;
+        }
+
+        input {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            width: 100%;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            border-color: #FF3D2E;
+            outline: none;
+        }
+
+        .submit-btn {
+            padding: 12px;
+            background: linear-gradient(135deg, #FF3D2E, #FF6F3D, #FF9440);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+
+        .register-link {
+            font-size: 14px;
+            color: #555;
+            text-align: center;
+        }
+
+        .register-link a {
+            color: #FF3D2E;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-<h1>Login</h1>
 
-<form th:action="@{/login}" method="post">
-    <div>
-        <label>Usuário:</label>
-        <input type="text" name="username" />
+<div class="container">
+    <div class="image-side"></div>
+
+    <div class="form-side">
+        <form class="form-card" th:action="@{/login}" method="post">
+            <h1>Login</h1>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <input type="email" name="username"  placeholder="Usuário" required>
+            <input type="password" name="password" placeholder="Senha" required>
+
+            <button type="submit" class="submit-btn">Entrar</button>
+
+            <div class="separator">ou</div>
+
+            <a class="google-btn" th:href="@{/oauth2/authorization/google}">
+                <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" alt="Google" width="20">
+                Entrar com Google
+            </a>
+
+            <p class="register-link">Não tem uma conta? <a href="/register">Cadastre-se</a></p>
+        </form>
     </div>
-    <div>
-        <label>Senha:</label>
-        <input type="password" name="password" />
-    </div>
-    <button type="submit">Entrar</button>
-</form>
+</div>
 
-<hr>
-
-<a th:href="@{/oauth2/authorization/google}">Entrar com Google</a>
 </body>
 </html>
