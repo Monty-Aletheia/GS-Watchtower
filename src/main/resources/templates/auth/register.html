@@ -86,6 +86,12 @@
             background: #ccc;
         }
 
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
         input {
             padding: 12px;
             border-radius: 8px;
@@ -97,6 +103,12 @@
         input:focus {
             border-color: #FF3D2E;
             outline: none;
+        }
+
+        .error-message {
+            color: #FF3D2E;
+            font-size: 12px;
+            margin-top: 4px;
         }
 
         .submit-btn {
@@ -149,9 +161,20 @@
 
             <div class="separator">ou</div>
 
-            <input type="text" name="name" th:field="*{name}" placeholder="Nome" required>
-            <input type="email" name="email" th:field="*{email}" placeholder="E-mail" required>
-            <input type="password" name="password" th:field="*{password}" placeholder="Senha" required>
+            <div class="input-group">
+                <input type="text" th:field="*{name}" placeholder="Nome">
+                <span class="error-message" th:if="${#fields.hasErrors('name')}" th:text="${#fields.errors('name')[0]}"></span>
+            </div>
+
+            <div class="input-group">
+                <input type="email" th:field="*{email}" placeholder="E-mail">
+                <span class="error-message" th:if="${#fields.hasErrors('email')}" th:text="${#fields.errors('email')[0]}"></span>
+            </div>
+
+            <div class="input-group">
+                <input type="password" th:field="*{password}" placeholder="Senha">
+                <span class="error-message" th:if="${#fields.hasErrors('password')}" th:text="${#fields.errors('password')[0]}"></span>
+            </div>
 
             <button type="submit" class="submit-btn">Cadastrar</button>
 

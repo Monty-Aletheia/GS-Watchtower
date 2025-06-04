@@ -1,12 +1,14 @@
 package br.com.fiap.watchtower.controller;
 
 import br.com.fiap.watchtower.dto.UserRequestDTO;
-import br.com.fiap.watchtower.model.User;
 import br.com.fiap.watchtower.service.UserService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import jakarta.validation.Valid;
 
 @Controller
 public class RegisterController {
@@ -19,14 +21,27 @@ public class RegisterController {
 
     @GetMapping("/register")
     public String showRegisterPage(Model model) {
-        model.addAttribute("user", new User());
+        if (!model.containsAttribute("user")) {
+            model.addAttribute("user", new UserRequestDTO("", "", ""));
+        }
         return "auth/register";
     }
 
     @PostMapping("/register")
-    public String createUser(UserRequestDTO userDTO) {
-        service.create(userDTO);
-        return "redirect:/login";
+    public String createUser(@Valid @ModelAttribute("user") UserRequestDTO userDTO, 
+                           BindingResult result, 
+                           Model model) {
+        if (result.hasErrors()) {
+            return "auth/register";
+        }
+        
+        try {
+            service.create(userDTO);
+            return "redirect:/login";
+        } catch (Exception e) {
+            System.err.println("Erro ao criar usuário: " + e.getMessage());
+            result.rejectValue("email", "error.user", "Erro ao criar usuário. Por favor, tente novamente.");
+            return "auth/register";
+        }
     }
-
 }

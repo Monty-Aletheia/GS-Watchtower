@@ -49,7 +49,6 @@ public class DashboardController {
         String pontosJson = objectMapper.writeValueAsString(pontos);
         model.addAttribute("pontos", pontosJson);
 
-        // Obtendo autenticação genérica
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication != null && authentication.isAuthenticated()) {
@@ -62,13 +61,13 @@ public class DashboardController {
                 model.addAttribute("name", name);
                 model.addAttribute("photo", oauthUser.getAttributes().get("picture"));
             } else {
-                // Usuário autenticado normalmente (por exemplo, com username e senha)
+
                 String username = authentication.getName();
                 model.addAttribute("name", username);
-                model.addAttribute("photo", "/img/default-user.png"); // Uma imagem padrão
+                model.addAttribute("photo", "/img/default-user.png");
             }
         } else {
-            // Usuário não autenticado
+
             model.addAttribute("name", "Visitante");
             model.addAttribute("photo", "/img/default-user.png");
         }
