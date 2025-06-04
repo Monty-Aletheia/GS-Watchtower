@@ -14,15 +14,12 @@ import org.slf4j.LoggerFactory;
 public class RiskEventConsumer {
 
     private final RiskAnalysisService riskAnalysisService;
-    private final ObjectMapper objectMapper;
     private final SimpMessagingTemplate messagingTemplate;
     private static final Logger logger = LoggerFactory.getLogger(RiskEventConsumer.class);
 
     public RiskEventConsumer(RiskAnalysisService riskAnalysisService, 
-                           ObjectMapper objectMapper,
                            SimpMessagingTemplate messagingTemplate) {
         this.riskAnalysisService = riskAnalysisService;
-        this.objectMapper = objectMapper;
         this.messagingTemplate = messagingTemplate;
     }
 
@@ -31,20 +28,19 @@ public class RiskEventConsumer {
         try {
             logger.info("Recebendo mensagem do RabbitMQ: {}", riskPoint);
             
-            // Realizar análise com IA
+            
             String aiAnalysis = riskAnalysisService.analyzeRisk(
                 riskPoint.getDescription(),
                 riskPoint.getLatitude(),
                 riskPoint.getLongitude()
             );
             
-            // Determinar nível de risco baseado na análise
+            
             riskPoint.setRiskLevel(riskAnalysisService.determineRiskLevel(aiAnalysis));
             riskPoint.setAiAnalysis(aiAnalysis);
             
             logger.info("Ponto de risco processado, enviando via WebSocket: {}", riskPoint);
             
-            // Enviar atualização via WebSocket
             messagingTemplate.convertAndSend("/topic/risk-points", riskPoint);
             logger.info("Mensagem enviada com sucesso via WebSocket");
             

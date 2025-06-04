@@ -16,32 +16,31 @@ public class RiskAnalysisService {
     public String analyzeRisk(String description, double latitude, double longitude) {
         String systemPrompt = """
             Você é um especialista em análise de riscos de desastres naturais.
-            Analise a descrição fornecida e forneça uma avaliação resumida do risco,
-            considerando a localização geográfica (latitude e longitude).
-            Forneça recomendações específicas para mitigação de riscos.
+            Forneça uma análise MUITO CONCISA (máximo 3 linhas) do risco descrito.
+            Use linguagem direta e profissional.
+            Foque apenas em:
+            1. Nível de risco sugerido (BAIXO, MÉDIO, ALTO ou CRÍTICO)
+            2. Principal preocupação
+            3. Ação recomendada
             """;
 
         String userPrompt = String.format("""
-            Localização: Latitude %f, Longitude %f
-            Descrição do evento: %s
+            Local: %s
+            Coordenadas: %.4f, %.4f
             
-            Por favor, forneça:
-            1. Nível de risco estimado
-            2. Análise resumida da situação
-            3. Recomendações de ação imediata
-            """, latitude, longitude, description);
+            Responda em português, em formato de tópicos curtos:
+            """, description, latitude, longitude);
        
         return this.chatClient.prompt().system(systemPrompt).user(userPrompt).call().content();
     }
 
     public RiskLevel determineRiskLevel(String aiAnalysis) {
-        if (aiAnalysis.toLowerCase().contains("crítico") || 
-            aiAnalysis.toLowerCase().contains("grave") || 
-            aiAnalysis.toLowerCase().contains("extremo")) {
+        String analysis = aiAnalysis.toLowerCase();
+        if (analysis.contains("crítico")) {
             return RiskLevel.CRITICAL;
-        } else if (aiAnalysis.toLowerCase().contains("alto")) {
+        } else if (analysis.contains("alto")) {
             return RiskLevel.HIGH;
-        } else if (aiAnalysis.toLowerCase().contains("médio")) {
+        } else if (analysis.contains("médio")) {
             return RiskLevel.MEDIUM;
         } else {
             return RiskLevel.LOW;

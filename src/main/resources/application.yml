@@ -42,8 +42,7 @@ spring:
             initial-interval: 2000
             max-attempts: 3
             multiplier: 1.5
-      # Porta do painel de administração do RabbitMQ
-    # Configuração do Spring AI
+
     ai:
       openai:
         api-key:
@@ -53,5 +52,5 @@ logging:
     org:
       springframework:
         security: DEBUG
-        amqp: INFO # Log level para RabbitMQ
-        ai: DEBUG # Log level para Spring AI
+        amqp: INFO
+        ai: DEBUG

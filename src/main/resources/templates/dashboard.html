@@ -116,6 +116,68 @@
             max-width: 240px;
         }
 
+        /* Estilos para o popup do marcador */
+        .leaflet-popup {
+            margin-bottom: 0;
+        }
+
+        .leaflet-popup-content {
+            margin: 0;
+            padding: 0;
+            width: auto !important; /* Força a largura a se ajustar ao conteúdo */
+        }
+
+        .leaflet-popup-content-wrapper {
+            padding: 0;
+            border-radius: 8px;
+            box-shadow: 0 3px 14px rgba(0,0,0,0.2);
+        }
+
+        .marker-popup {
+            min-width: 300px;
+            max-width: 400px;
+            padding: 15px;
+        }
+
+        .marker-popup h3 {
+            margin: 0 0 12px;
+            color: #FF3D2E;
+            font-size: 16px;
+            border-bottom: 2px solid #FF3D2E;
+            padding-bottom: 8px;
+            word-wrap: break-word;
+        }
+
+        .marker-popup .risk-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        .risk-badge.LOW { background: #4CAF50; color: white; }
+        .risk-badge.MEDIUM { background: #FFC107; color: black; }
+        .risk-badge.HIGH { background: #FF5722; color: white; }
+        .risk-badge.CRITICAL { background: #F44336; color: white; }
+
+        .marker-popup .analysis {
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 12px 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .marker-popup .timestamp {
+            font-size: 12px;
+            color: #666;
+            margin-top: 12px;
+            border-top: 1px solid #eee;
+            padding-top: 8px;
+        }
+
     </style>
 </head>
 <body>
@@ -163,81 +225,118 @@
     console.log('data:', data);
 
     var brasilBounds = [
-        [-34.0, -74.0],
-        [5.5, -34.0]
+        [-33.0, -75.0],
+        [6.5, -33.0]
     ];
 
     var map = L.map('map', {
         maxBounds: brasilBounds,
-        maxBoundsViscosity: 1.0,
-        minZoom: 4,
-        maxZoom: 20
+        maxBoundsViscosity: 0.8,
+        minZoom: 3,
+        maxZoom: 18,
+        bounceAtZoomLimits: false
     }).setView([-14.2350, -51.9253], 4);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap & CartoDB'
+        attribution: '&copy; OpenStreetMap & CartoDB',
+        subdomains: 'abcd',
+        maxZoom: 18,
+        minZoom: 3,
+        noWrap: true
     }).addTo(map);
 
-    // Criar ícones personalizados para cada nível de risco
     const icons = {
         LOW: L.icon({
-            iconUrl: '/images/risk-marker.png',
-            iconSize: [24, 32],
-            iconAnchor: [12, 32],
-            popupAnchor: [0, -32]
+            iconUrl: '/images/risk_markers/low-risk-marker.png',
+            iconSize: [20, 28],
+            iconAnchor: [10, 28],
+            popupAnchor: [0, -30]
         }),
         MEDIUM: L.icon({
-            iconUrl: '/images/risk-marker.png',
-            iconSize: [24, 32],
-            iconAnchor: [12, 32],
-            popupAnchor: [0, -32]
+            iconUrl: '/images/risk_markers/medium-risk-marker.png',
+            iconSize: [20, 28],
+            iconAnchor: [10, 28],
+            popupAnchor: [0, -30]
         }),
         HIGH: L.icon({
-            iconUrl: '/images/risk-marker.png',
-            iconSize: [24, 32],
-            iconAnchor: [12, 32],
-            popupAnchor: [0, -32]
+            iconUrl: '/images/risk_markers/high-risk-marker.png',
+            iconSize: [20, 28],
+            iconAnchor: [10, 28],
+            popupAnchor: [0, -30]
         }),
         CRITICAL: L.icon({
-            iconUrl: '/images/risk-marker.png',
-            iconSize: [24, 32],
-            iconAnchor: [12, 32],
-            popupAnchor: [0, -32]
+            iconUrl: '/images/risk_markers/critical-risk-marker.png',
+            iconSize: [20, 28],
+            iconAnchor: [10, 28],
+            popupAnchor: [0, -30]
         })
     };
 
-    // Função para criar o conteúdo do popup
     function createPopupContent(point) {
+        const riskLevel = point.riskLevel || 'MEDIUM';
+        const timestamp = point.timestamp ? new Date(point.timestamp).toLocaleString() : '';
+        
         return `
-            <div style="min-width: 200px;">
-                <h3 style="margin: 0 0 10px; color: #FF3D2E;">${point.description || 'Sem descrição'}</h3>
-                <p><strong>Nível de Risco:</strong> ${point.riskLevel || 'MEDIUM'}</p>
-                <p><strong>Análise:</strong></p>
-                <p style="white-space: pre-wrap;">${point.aiAnalysis || 'Análise pendente...'}</p>
-                ${point.timestamp ? `<p><strong>Data:</strong> ${new Date(point.timestamp).toLocaleString()}</p>` : ''}
+            <div class="marker-popup">
+                <h3>${point.description || 'Sem descrição'}</h3>
+                <span class="risk-badge ${riskLevel}">${riskLevel}</span>
+                ${point.aiAnalysis ? `
+                    <div class="analysis">${point.aiAnalysis}</div>
+                ` : ''}
+                ${timestamp ? `
+                    <div class="timestamp">
+                        <i class="fas fa-clock"></i> ${timestamp}
+                    </div>
+                ` : ''}
             </div>
         `;
     }
 
-    // Função para adicionar um marcador ao mapa
     function addMarker(point) {
         console.log('Tentando adicionar marcador com dados:', point);
         
-        // Validar se as coordenadas existem e são números
         if (!point || typeof point.latitude !== 'number' || typeof point.longitude !== 'number') {
             console.error('Coordenadas inválidas:', point);
             return;
         }
 
-        // Usar ícone padrão (MEDIUM) se não houver riskLevel definido
         const riskLevel = point.riskLevel || 'MEDIUM';
         const icon = icons[riskLevel] || icons.MEDIUM;
         console.log('Usando ícone para nível:', riskLevel);
         
         try {
-            const marker = L.marker([point.latitude, point.longitude], {icon: icon})
-                .addTo(map)
-                .bindPopup(createPopupContent(point));
+            const marker = L.marker([point.latitude, point.longitude], {
+                icon: icon
+            })
+            .addTo(map)
+            .bindPopup(createPopupContent(point), {
+                maxWidth: 400,        // Aumentando a largura máxima
+                minWidth: 300,        // Aumentando a largura mínima
+                autoPan: true,        // Mantém o autopan
+                autoPanPadding: [50, 50],
+                closeButton: true,
+                className: 'custom-popup', // Classe personalizada para o popup
+                offset: [0, -10],      // Ajusta o offset do popup
+                keepInView: true,      // Mantém o popup visível na tela
+                // Função que determina a direção do popup baseada na posição no mapa
+                direction: 'auto',     // 'auto', 'top', 'bottom', 'left', 'right', 'center'
+                interactive: true      // Permite interação com o conteúdo do popup
+            });
+            
+            // Ajusta a posição do popup baseado na posição do marcador no mapa
+            marker.on('popupopen', function(e) {
+                const px = map.project(e.target.getLatLng());
+                const container = map.getContainer();
+                const height = container.clientHeight;
+                
+                // Se o marcador estiver na metade superior do mapa
+                if (px.y < height/2) {
+                    // Força o popup a aparecer abaixo do marcador
+                    const popup = e.target.getPopup();
+                    popup.options.offset = L.point(0, 10);
+                    popup.update();
+                }
+            });
             
             console.log('Marcador adicionado com sucesso');
             return marker;
@@ -246,7 +345,6 @@
         }
     }
 
-    // Adicionar marcadores existentes
     console.log('Dados iniciais:', data);
     data.forEach(point => {
         try {
@@ -256,11 +354,9 @@
         }
     });
 
-    // Conectar ao WebSocket
     const socket = new SockJS('/ws-risk-points');
     const stompClient = Stomp.over(socket);
 
-    // Configurar callbacks de debug
     socket.onopen = function() {
         console.log('SockJS: Conexão aberta');
     };
@@ -271,7 +367,6 @@
         console.error('SockJS: Erro na conexão', error);
     };
 
-    // Habilitar logs do STOMP
     stompClient.debug = function(str) {
         console.log('STOMP: ', str);
     };
