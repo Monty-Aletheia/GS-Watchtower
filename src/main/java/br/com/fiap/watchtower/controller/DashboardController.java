@@ -1,5 +1,6 @@
 package br.com.fiap.watchtower.controller;
 
+import br.com.fiap.watchtower.model.User;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.security.core.Authentication;
@@ -54,20 +55,19 @@ public class DashboardController {
         if (authentication != null && authentication.isAuthenticated()) {
             Object principal = authentication.getPrincipal();
 
-            if (principal instanceof OAuth2User) {
-                OAuth2User oauthUser = (OAuth2User) principal;
+            if (principal instanceof OAuth2User oauthUser) {
                 List<String> fullName = List.of(oauthUser.getAttributes().get("name").toString().split(" "));
                 String name = fullName.size() >= 2 ? fullName.get(0) + " " + fullName.get(1) : fullName.get(0);
                 model.addAttribute("name", name);
                 model.addAttribute("photo", oauthUser.getAttributes().get("picture"));
+            } else if (principal instanceof User user) {
+                model.addAttribute("name", user.getName());
             } else {
-
                 String username = authentication.getName();
                 model.addAttribute("name", username);
                 model.addAttribute("photo", "/img/default-user.png");
             }
         } else {
-
             model.addAttribute("name", "Visitante");
             model.addAttribute("photo", "/img/default-user.png");
         }

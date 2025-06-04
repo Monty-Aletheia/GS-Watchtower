@@ -32,16 +32,12 @@ public class RegisterController {
                            BindingResult result, 
                            Model model) {
         if (result.hasErrors()) {
+            System.err.println("Erro ao criar usuário: " + result.getAllErrors());
+            model.addAttribute("user", userDTO);
             return "auth/register";
         }
-        
-        try {
-            service.create(userDTO);
-            return "redirect:/login";
-        } catch (Exception e) {
-            System.err.println("Erro ao criar usuário: " + e.getMessage());
-            result.rejectValue("email", "error.user", "Erro ao criar usuário. Por favor, tente novamente.");
-            return "auth/register";
-        }
+        service.create(userDTO);
+        return "redirect:/login";
     }
+
 }
