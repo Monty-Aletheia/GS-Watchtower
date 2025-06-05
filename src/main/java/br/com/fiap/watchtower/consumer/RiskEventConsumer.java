@@ -27,14 +27,14 @@ public class RiskEventConsumer {
         try {
             logger.info("Recebendo mensagem do RabbitMQ: {}", riskPoint);
             
-            
+
             String aiAnalysis = riskAnalysisService.analyzeRisk(
                 riskPoint.getDescription(),
                 riskPoint.getLatitude(),
                 riskPoint.getLongitude()
             );
-            
-            
+
+//            String aiAnalysis = "TESTE";
             riskPoint.setRiskLevel(riskAnalysisService.determineRiskLevel(aiAnalysis));
             riskPoint.setAiAnalysis(aiAnalysis);
             

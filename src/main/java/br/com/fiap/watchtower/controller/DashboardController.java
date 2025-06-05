@@ -19,36 +19,36 @@ public class DashboardController {
 
     @GetMapping("/dashboard")
     public String showDashboard(Model model) throws JsonProcessingException {
-        List<Map<String, Object>> pontos = new ArrayList<>();
-
-        Map<String, Object> p1 = Map.of(
-                "latitude", -23.5505,
-                "longitude", -46.6333,
-                "description", "São Paulo",
-                "riskLevel", "MEDIUM"
-        );
-
-        Map<String, Object> p2 = Map.of(
-                "latitude", -22.9068,
-                "longitude", -43.1729,
-                "description", "Rio de Janeiro",
-                "riskLevel", "MEDIUM"
-        );
-
-        Map<String, Object> p3 = Map.of(
-                "latitude", -15.7939,
-                "longitude", -47.8828,
-                "description", "Brasília",
-                "riskLevel", "MEDIUM"
-        );
-
-        pontos.add(p1);
-        pontos.add(p2);
-        pontos.add(p3);
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        String pontosJson = objectMapper.writeValueAsString(pontos);
-        model.addAttribute("pontos", pontosJson);
+//        List<Map<String, Object>> pontos = new ArrayList<>();
+//
+//        Map<String, Object> p1 = Map.of(
+//                "latitude", -23.5505,
+//                "longitude", -46.6333,
+//                "description", "São Paulo",
+//                "riskLevel", "MEDIUM"
+//        );
+//
+//        Map<String, Object> p2 = Map.of(
+//                "latitude", -22.9068,
+//                "longitude", -43.1729,
+//                "description", "Rio de Janeiro",
+//                "riskLevel", "MEDIUM"
+//        );
+//
+//        Map<String, Object> p3 = Map.of(
+//                "latitude", -15.7939,
+//                "longitude", -47.8828,
+//                "description", "Brasília",
+//                "riskLevel", "MEDIUM"
+//        );
+//
+//        pontos.add(p1);
+//        pontos.add(p2);
+//        pontos.add(p3);
+//
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        String pontosJson = objectMapper.writeValueAsString(pontos);
+//        model.addAttribute("pontos", pontosJson);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
