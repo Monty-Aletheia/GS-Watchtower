@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Relatórios - The Watchtower</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <link rel="icon" href="/images/favicon.png" type="image/png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            top: 0;
+            background: linear-gradient(135deg, #FF3D2E, #FF6F3D, #FF9440);
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: sticky;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .sidebar nav a {
+            color: black;
+            text-decoration: none;
+            margin: 10px 0;
+            display: block;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 8px;
+            transition: background 0.3s, transform 0.2s;
+            width: 100%;
+            text-align: left;
+        }
+
+        .sidebar nav a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .header {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #FF3D2E;
+        }
+
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .report-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(255, 61, 46, 0.15);
+            border-left: 4px solid #FF3D2E;
+            transition: transform 0.2s;
+        }
+
+        .report-card[data-risk="LOW"] {
+            border-left-color: #4CAF50;
+        }
+
+        .report-card[data-risk="MEDIUM"] {
+            border-left-color: #FFC107;
+        }
+
+        .report-card[data-risk="HIGH"] {
+            border-left-color: #FF5722;
+        }
+
+        .report-card[data-risk="CRITICAL"] {
+            border-left-color: #F44336;
+        }
+
+        .report-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .report-timestamp {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .report-content {
+            font-size: 0.95em;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .report-location {
+            margin-top: 12px;
+            font-size: 0.85em;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        .risk-badge.LOW { background: #4CAF50; color: white; }
+        .risk-badge.MEDIUM { background: #FFC107; color: black; }
+        .risk-badge.HIGH { background: #FF5722; color: white; }
+        .risk-badge.CRITICAL { background: #F44336; color: white; }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filter-btn {
+            background: white;
+            border: 2px solid #FF3D2E;
+            color: #FF3D2E;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: #FF3D2E;
+            color: white;
+        }
+
+        .no-reports {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .logo {
+            width: 14vw;
+            max-width: 240px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div>
+        <img class="logo" src="/images/logo-no-background.png" alt="Watchtower">
+        <nav>
+            <a href="/dashboard">Mapa</a>
+            <a href="/reports" style="background: rgba(255, 255, 255, 0.2);">Relatórios</a>
+            <a href="#">Configurações</a>
+            <form th:action="@{/logout}" method="post" style="margin: 10px 0;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button type="submit" class="logout-btn">
+                    Sair
+                </button>
+            </form>
+        </nav>
+    </div>
+
+    <div>
+        <p>Versão 1.0</p>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="header">Relatórios de Incidentes</div>
+
+    <div class="filters">
+        <button class="filter-btn active" data-risk="ALL">Todos</button>
+        <button class="filter-btn" data-risk="LOW">Baixo Risco</button>
+        <button class="filter-btn" data-risk="MEDIUM">Médio Risco</button>
+        <button class="filter-btn" data-risk="HIGH">Alto Risco</button>
+        <button class="filter-btn" data-risk="CRITICAL">Crítico</button>
+    </div>
+
+    <div class="reports-grid" id="reports-grid">
+        <div class="no-reports">Nenhum relatório encontrado</div>
+    </div>
+</div>
+
+<script>
+    // Carrega e exibe os relatórios salvos
+    function loadReports(filter = 'ALL') {
+        const reportsGrid = document.getElementById('reports-grid');
+        const saved = localStorage.getItem('watchtower_reports');
+        
+        reportsGrid.innerHTML = '';
+        
+        if (!saved) {
+            reportsGrid.innerHTML = '<div class="no-reports">Nenhum relatório encontrado</div>';
+            return;
+        }
+
+        try {
+            const reports = JSON.parse(saved);
+            const filteredReports = filter === 'ALL' 
+                ? reports 
+                : reports.filter(r => r.riskLevel === filter);
+
+            if (filteredReports.length === 0) {
+                reportsGrid.innerHTML = '<div class="no-reports">Nenhum relatório encontrado para este filtro</div>';
+                return;
+            }
+
+            filteredReports.forEach(report => {
+                const card = document.createElement('div');
+                card.className = 'report-card';
+                card.setAttribute('data-risk', report.riskLevel);
+
+                const timestamp = new Date(report.timestamp);
+                
+                card.innerHTML = `
+                    <div class="report-timestamp">${timestamp.toLocaleString()}</div>
+                    <span class="risk-badge ${report.riskLevel}">${report.riskLevel}</span>
+                    <div class="report-content">${report.content || 'Sem análise disponível'}</div>
+                    <div class="report-location">
+                        📍 Lat: ${report.location.lat.toFixed(6)}, Lng: ${report.location.lng.toFixed(6)}
+                    </div>
+                `;
+
+                reportsGrid.appendChild(card);
+            });
+        } catch (error) {
+            console.error('Erro ao carregar relatórios:', error);
+            reportsGrid.innerHTML = '<div class="no-reports">Erro ao carregar relatórios</div>';
+        }
+    }
+
+    // Configura os filtros
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            loadReports(btn.getAttribute('data-risk'));
+        });
+    });
+
+    // Carrega relatórios iniciais
+    loadReports();
+</script>
+
+</body>
+</html> 
