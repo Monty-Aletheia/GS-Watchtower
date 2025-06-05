@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
 
-    public static final String QUEUE_RISK_EVENTS = "risk-events-queue";
+    public static final String QUEUE_RISK_EVENTS = "java-queue";
     public static final String EXCHANGE_RISK_EVENTS = "risk-events-exchange";
     public static final String ROUTING_KEY_RISK_EVENTS = "risk.event.#";
 
@@ -20,18 +20,18 @@ public class RabbitMQConfig {
         return new Queue(QUEUE_RISK_EVENTS);
     }
 
-    @Bean
-    public TopicExchange exchange() {
-        return new TopicExchange(EXCHANGE_RISK_EVENTS);
-    }
-
-    @Bean
-    public Binding binding(Queue queue, TopicExchange exchange) {
-        return BindingBuilder
-                .bind(queue)
-                .to(exchange)
-                .with(ROUTING_KEY_RISK_EVENTS);
-    }
+//    @Bean
+//    public TopicExchange exchange() {
+//        return new TopicExchange(EXCHANGE_RISK_EVENTS);
+//    }
+//
+//    @Bean
+//    public Binding binding(Queue queue, TopicExchange exchange) {
+//        return BindingBuilder
+//                .bind(queue)
+//                .to(exchange)
+//                .with(ROUTING_KEY_RISK_EVENTS);
+//    }
 
     @Bean
     public MessageConverter messageConverter() {

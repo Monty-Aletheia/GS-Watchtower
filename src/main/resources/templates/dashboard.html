@@ -190,6 +190,7 @@
             background: #FF3D2E;
             color: white;
             border: none;
+            min-width: 93px;
             padding: 8px 15px;
             border-radius: 20px;
             cursor: pointer;
@@ -535,6 +536,51 @@
     stompClient.debug = function(str) {
         console.log('STOMP: ', str);
     };
+
+    // Verifica se há uma localização para focar
+    function checkForFocusLocation() {
+        try {
+            const focusData = localStorage.getItem('watchtower_focus_location');
+            if (focusData) {
+                const { lat, lng, timestamp } = JSON.parse(focusData);
+                
+                // Verifica se o foco foi solicitado nos últimos 5 segundos
+                if (new Date().getTime() - timestamp < 5000) {
+                    // Remove o item do localStorage
+                    localStorage.removeItem('watchtower_focus_location');
+                    
+                    // Foca no ponto com animação suave
+                    map.setView([lat, lng], 12, {
+                        animate: true,
+                        duration: 1
+                    });
+
+                    // Procura por um marcador existente nessa posição
+                    const markers = [];
+                    map.eachLayer((layer) => {
+                        if (layer instanceof L.Marker) {
+                            const pos = layer.getLatLng();
+                            if (Math.abs(pos.lat - lat) < 0.0001 && Math.abs(pos.lng - lng) < 0.0001) {
+                                markers.push(layer);
+                            }
+                        }
+                    });
+
+                    // Se encontrar um marcador, abre seu popup
+                    if (markers.length > 0) {
+                        setTimeout(() => {
+                            markers[0].openPopup();
+                        }, 1000);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao verificar localização de foco:', error);
+        }
+    }
+
+    // Verifica a localização de foco quando a página carrega
+    checkForFocusLocation();
 
     let savedReports = [];
 

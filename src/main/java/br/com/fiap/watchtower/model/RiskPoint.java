@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Embedded;
 import java.time.LocalDateTime;
 
 @Entity
@@ -13,12 +14,18 @@ public class RiskPoint {
     private Long id;
     private Double latitude;
     private Double longitude;
-    private String description;
+    private String desasterType;
+    private String markerType;
+    private String markerName;
+    private String markerImage;
     private RiskLevel riskLevel;
     private LocalDateTime timestamp;
     private String aiAnalysis;
+    private String description;
 
-    // Getters e Setters
+    @Embedded
+    private SensorData sensorData;
+
     public Long getId() {
         return id;
     }
@@ -43,12 +50,36 @@ public class RiskPoint {
         this.longitude = longitude;
     }
 
-    public String getDescription() {
-        return description;
+    public String getDesasterType() {
+        return desasterType;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setDesasterType(String desasterType) {
+        this.desasterType = desasterType;
+    }
+
+    public String getMarkerType() {
+        return markerType;
+    }
+
+    public void setMarkerType(String markerType) {
+        this.markerType = markerType;
+    }
+
+    public String getMarkerName() {
+        return markerName;
+    }
+
+    public void setMarkerName(String markerName) {
+        this.markerName = markerName;
+    }
+
+    public String getMarkerImage() {
+        return markerImage;
+    }
+
+    public void setMarkerImage(String markerImage) {
+        this.markerImage = markerImage;
     }
 
     public RiskLevel getRiskLevel() {
@@ -74,4 +105,37 @@ public class RiskPoint {
     public void setAiAnalysis(String aiAnalysis) {
         this.aiAnalysis = aiAnalysis;
     }
-} 
+
+    public SensorData getSensorData() {
+        return sensorData;
+    }
+
+    public void setSensorData(SensorData sensorData) {
+        this.sensorData = sensorData;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    @Override
+    public String toString() {
+        return "RiskPoint{" +
+                "id=" + id +
+                ", latitude=" + latitude +
+                ", longitude=" + longitude +
+                ", desasterType='" + desasterType + '\'' +
+                ", markerType='" + markerType + '\'' +
+                ", markerName='" + markerName + '\'' +
+                ", markerImage='" + markerImage + '\'' +
+                ", riskLevel=" + riskLevel +
+                ", timestamp=" + timestamp +
+                ", aiAnalysis='" + aiAnalysis + '\'' +
+                ", sensorData=" + sensorData +
+                '}';
+    }
+}

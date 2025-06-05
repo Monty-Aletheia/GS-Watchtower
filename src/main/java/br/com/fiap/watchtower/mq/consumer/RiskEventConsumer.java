@@ -1,4 +1,4 @@
-package br.com.fiap.watchtower.consumer;
+package br.com.fiap.watchtower.mq.consumer;
 
 import br.com.fiap.watchtower.model.RiskPoint;
 import br.com.fiap.watchtower.service.RiskAnalysisService;
@@ -22,20 +22,26 @@ public class RiskEventConsumer {
         this.messagingTemplate = messagingTemplate;
     }
 
-    @RabbitListener(queues = "risk-events-queue")
+    @RabbitListener(queues = "java-queue")
     public void receiveRiskEvent(@Payload RiskPoint riskPoint) {
         try {
             logger.info("Recebendo mensagem do RabbitMQ: {}", riskPoint);
-            
 
+            System.out.println(riskPoint);
             String aiAnalysis = riskAnalysisService.analyzeRisk(
-                riskPoint.getDescription(),
+                riskPoint.getDesasterType(),
                 riskPoint.getLatitude(),
-                riskPoint.getLongitude()
+                riskPoint.getLongitude(),
+                riskPoint.getSensorData()
             );
 
 //            String aiAnalysis = "TESTE";
             riskPoint.setRiskLevel(riskAnalysisService.determineRiskLevel(aiAnalysis));
+
+            aiAnalysis =  riskAnalysisService.extractDescriptionFromAiAnalysis(aiAnalysis)[0];
+            String description = riskAnalysisService.extractDescriptionFromAiAnalysis(aiAnalysis)[1];
+
+            riskPoint.setDescription(description);
             riskPoint.setAiAnalysis(aiAnalysis);
             
             logger.info("Ponto de risco processado, enviando via WebSocket: {}", riskPoint);

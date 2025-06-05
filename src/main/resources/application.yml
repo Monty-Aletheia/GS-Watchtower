@@ -31,7 +31,7 @@ spring:
       baseline-on-migrate: true
     # Configuração do RabbitMQ
     rabbitmq:
-      host: localhost
+      host: rabbitmq-aci-watchtower.brazilsouth.azurecontainer.io
       port: 5672
       username: guest
       password: guest
@@ -42,6 +42,7 @@ spring:
             initial-interval: 2000
             max-attempts: 3
             multiplier: 1.5
+      addresses: amqp://guest:guest@rabbitmq-aci-watchtower.brazilsouth.azurecontainer.io:5672
 
     ai:
       openai:
