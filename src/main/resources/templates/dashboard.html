@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
 <head>
-    <title>The Watchtower</title>
+    <title th:text="#{app.title}">The Watchtower</title>
     <meta charset="utf-8">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
     <link rel="icon" href="/images/favicon.png" type="image/png">
@@ -307,6 +307,47 @@
             padding-top: 8px;
         }
 
+        .marker-popup .sensor-data {
+            margin: 12px 0;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+
+        .marker-popup .sensor-data h4 {
+            margin: 0 0 8px 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .marker-popup .sensor-data ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 8px;
+        }
+
+        .marker-popup .sensor-data li {
+            font-size: 13px;
+            color: #333;
+            padding: 4px 8px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+
+        .marker-popup .description {
+            margin: 12px 0;
+            padding: 8px;
+            background: #fff3e0;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #333;
+        }
+
         @keyframes pulse {
             0% {
                 transform: scale(1);
@@ -327,6 +368,30 @@
             transform-origin: center bottom;
         }
 
+        .error-message {
+            padding: 20px;
+            background: #fff3f3;
+            border: 1px solid #ff3d2e;
+            border-radius: 8px;
+            text-align: center;
+            color: #ff3d2e;
+        }
+
+        .retry-button {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: #ff3d2e;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .retry-button:hover {
+            background: #ff2415;
+        }
+
     </style>
 </head>
 <body>
@@ -334,15 +399,15 @@
 <div class="sidebar">
 
     <div>
-        <img class="logo" src="/images/logo-no-background.png" alt="Watchtower">
+        <img class="logo" src="/images/logo-no-background.png" th:alt="#{app.title}">
 
         <nav>
-            <a class="menu-item" style="background: rgba(255, 255, 255, 0.2);" href="#">Mapa</a>
-            <a class="menu-item" href="/reports">Relatórios</a>
-            <a class="menu-item" href="#">Configurações</a>
+            <a class="menu-item" style="background: rgba(255, 255, 255, 0.2);" href="#" th:text="#{menu.home}">Mapa</a>
+            <a class="menu-item" href="/reports" th:text="#{menu.reports}">Relatórios</a>
+            <a class="menu-item" href="#" th:text="#{menu.settings}">Configurações</a>
             <form th:action="@{/logout}" method="post" style="margin: 10px 0;">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                <button type="submit" class="logout-btn">
+                <button type="submit" class="logout-btn" th:text="#{menu.logout}">
                     Sair
                 </button>
             </form>
@@ -351,12 +416,14 @@
     </div>
 
     <div>
-        <p>Versão 1.0</p>
+        <p th:text="#{reports.version}">Versão 1.0</p>
     </div>
 </div>
 
 <div class="main-content">
-    <div class="header">Bem-vindo, <span th:text="${name}"></span></div>
+    <div class="header">
+        <span th:text="#{app.welcome}">Bem-vindo</span>, <span th:text="${name}"></span>
+    </div>
 
     <div class="dashboard-grid">
         <div class="map-container card">
@@ -366,11 +433,11 @@
 
         <div class="reports-container">
             <div class="reports-header">
-                <h2>Análises em Tempo Real</h2>
-                <a href="/reports" class="view-all-btn">Ver Todos</a>
+                <h2 th:text="#{dashboard.reports}">Análises em Tempo Real</h2>
+                <a href="/reports" class="view-all-btn" th:text="#{button.view.all}">Ver Todos</a>
             </div>
             <div id="reports-list">
-                <div class="report-loading">
+                <div class="report-loading" th:text="#{dashboard.loading}">
                     Aguardando novos eventos...
                 </div>
             </div>
@@ -432,17 +499,54 @@
         })
     };
 
+    // Atualizando as strings do JavaScript
+    const translations = {
+        noDescription: /*[[#{dashboard.risk.no.description}]]*/ 'Sem descrição',
+        loading: /*[[#{dashboard.loading}]]*/ 'Aguardando novos eventos...',
+        riskLevels: {
+            LOW: /*[[#{dashboard.risk.low}]]*/ 'Baixo',
+            MEDIUM: /*[[#{dashboard.risk.medium}]]*/ 'Médio',
+            HIGH: /*[[#{dashboard.risk.high}]]*/ 'Alto',
+            CRITICAL: /*[[#{dashboard.risk.critical}]]*/ 'Crítico'
+        }
+    };
+
     function createPopupContent(point) {
         const riskLevel = point.riskLevel || 'MEDIUM';
         const timestamp = point.timestamp ? new Date(point.timestamp).toLocaleString() : '';
+        const desasterType = point.desasterType ? point.desasterType.charAt(0).toUpperCase() + point.desasterType.slice(1) : '';
+        
+        let sensorInfo = '';
+        if (point.sensorData) {
+            const sd = point.sensorData;
+            sensorInfo = `
+                <div class="sensor-data">
+                    <h4>Dados do Sensor:</h4>
+                    <ul>
+                        ${sd.temperatura ? `<li>Temperatura: ${sd.temperatura}°C</li>` : ''}
+                        ${sd.umidade ? `<li>Umidade: ${sd.umidade}%</li>` : ''}
+                        ${sd.pressao ? `<li>Pressão: ${sd.pressao} hPa</li>` : ''}
+                        ${sd.vento ? `<li>Vento: ${sd.vento} km/h</li>` : ''}
+                        ${sd.chuva ? `<li>Chuva: ${sd.chuva} mm</li>` : ''}
+                        ${sd.nivelAgua ? `<li>Nível da Água: ${sd.nivelAgua} m</li>` : ''}
+                        ${sd.gases ? `<li>Gases: ${sd.gases} ppm</li>` : ''}
+                        ${sd.luminosidade ? `<li>Luminosidade: ${sd.luminosidade} lux</li>` : ''}
+                    </ul>
+                </div>
+            `;
+        }
         
         return `
             <div class="marker-popup">
-                <h3>${point.description || 'Sem descrição'}</h3>
-                <span class="risk-badge ${riskLevel}">${riskLevel}</span>
+                <h3>${desasterType || translations.noDescription}</h3>
+                <span class="risk-badge ${riskLevel}">${translations.riskLevels[riskLevel]}</span>
+                ${point.description ? `
+                    <div class="description">${point.description}</div>
+                ` : ''}
                 ${point.aiAnalysis ? `
                     <div class="analysis">${point.aiAnalysis}</div>
                 ` : ''}
+                ${sensorInfo}
                 ${timestamp ? `
                     <div class="timestamp">
                         <i class="fas fa-clock"></i> ${timestamp}
@@ -460,7 +564,16 @@
             return;
         }
 
-        const riskLevel = point.riskLevel || 'MEDIUM';
+        let riskLevel = point.riskLevel || 'MEDIUM';
+        if (!point.riskLevel && point.desasterType) {
+            const desasterType = point.desasterType.toLowerCase();
+            if (desasterType === 'enchente' || desasterType === 'tempestade') {
+                riskLevel = 'HIGH';
+            } else if (desasterType === 'onda de calor') {
+                riskLevel = 'HIGH';
+            }
+        }
+
         const icon = icons[riskLevel] || icons.MEDIUM;
         console.log('Usando ícone para nível:', riskLevel);
         
@@ -481,24 +594,16 @@
                 interactive: true
             });
 
-            // Adiciona a animação após o marcador estar no mapa
             marker.on('add', function() {
-
                 const container = this.getElement();
-                
                 if (container) {
-
                     container.classList.add('marker-pulse');
-                    
                     setTimeout(() => {
-
                         container.classList.remove('marker-pulse');
-                        
                     }, 3000);
                 }
             });
-            
-            // Ajusta a posição do popup baseado na posição do marcador no mapa
+
             marker.on('popupopen', function(e) {
                 const px = map.project(e.target.getLatLng());
                 const container = map.getContainer();
@@ -512,8 +617,7 @@
             });
 
             marker.addTo(map);
-            
-            console.log('Marcador adicionado com sucesso');
+            console.log('Marcador adicionado com sucesso em:', point.latitude, point.longitude);
             return marker;
         } catch (error) {
             console.error('Erro ao adicionar marcador:', error);
@@ -522,40 +626,130 @@
 
     const socket = new SockJS('/ws-risk-points');
     const stompClient = Stomp.over(socket);
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    const reconnectDelay = 2000; // 2 segundos
 
-    socket.onopen = function() {
-        console.log('SockJS: Conexão aberta');
-    };
-    socket.onclose = function() {
-        console.log('SockJS: Conexão fechada');
-    };
-    socket.onerror = function(error) {
-        console.error('SockJS: Erro na conexão', error);
-    };
+    function connect() {
+        socket.onopen = function() {
+            console.log('SockJS: Conexão aberta');
+            reconnectAttempts = 0;
+        };
 
-    stompClient.debug = function(str) {
-        console.log('STOMP: ', str);
-    };
+        socket.onclose = function() {
+            console.log('SockJS: Conexão fechada');
+            tryReconnect();
+        };
 
-    // Verifica se há uma localização para focar
+        socket.onerror = function(error) {
+            console.error('SockJS: Erro na conexão', error);
+            tryReconnect();
+        };
+
+        stompClient.debug = function(str) {
+            console.log('STOMP: ', str);
+        };
+
+        stompClient.connect({}, function(frame) {
+            console.log('STOMP: Conectado ao WebSocket', frame);
+
+            subscribeToTopics();
+
+        }, function(error) {
+            console.error('STOMP: Erro na conexão', error);
+            tryReconnect();
+        });
+    }
+
+    function subscribeToTopics() {
+        stompClient.subscribe('/topic/risk-points', function(message) {
+            console.log('STOMP: Mensagem recebida raw:', message.body);
+            try {
+                const point = JSON.parse(message.body);
+                console.log('STOMP: Ponto de risco parseado:', point);
+                addMarker(point);
+                addReport(point);
+            } catch (error) {
+                console.error('Erro ao processar mensagem:', error);
+            }
+        });
+
+        stompClient.subscribe('/topic/markers', function(message) {
+            console.log('STOMP: Lista de markers recebida:', message.body);
+            try {
+                const response = JSON.parse(message.body);
+                console.log('STOMP: Lista de markers parseada:', response);
+                
+                // Limpa marcadores existentes antes de adicionar novos
+                map.eachLayer((layer) => {
+                    if (layer instanceof L.Marker) {
+                        map.removeLayer(layer);
+                    }
+                });
+
+                if (Array.isArray(response)) {
+                    response.forEach(point => {
+                        console.log('Processando marker:', point);
+                        addMarker(point);
+                        addReport(point);
+                    });
+                } else {
+                    console.error('Resposta não é um array:', response);
+                }
+            } catch (error) {
+                console.error('Erro ao processar lista de markers:', error);
+            }
+        });
+    }
+
+    function tryReconnect() {
+        if (reconnectAttempts < maxReconnectAttempts) {
+            reconnectAttempts++;
+            console.log(`Tentativa de reconexão ${reconnectAttempts} de ${maxReconnectAttempts} em ${reconnectDelay}ms`);
+            
+            setTimeout(() => {
+                console.log('Tentando reconectar...');
+                connect();
+            }, reconnectDelay);
+        } else {
+            console.error('Número máximo de tentativas de reconexão atingido');
+
+            const reportsList = document.getElementById('reports-list');
+            reportsList.innerHTML = `
+                <div class="error-message">
+                    Erro de conexão com o servidor. 
+                    <button onclick="resetAndReconnect()" class="retry-button">Tentar Novamente</button>
+                </div>
+            `;
+        }
+    }
+
+    function resetAndReconnect() {
+        reconnectAttempts = 0;
+        connect();
+    }
+
+
+    connect();
+
+
     function checkForFocusLocation() {
         try {
             const focusData = localStorage.getItem('watchtower_focus_location');
             if (focusData) {
                 const { lat, lng, timestamp } = JSON.parse(focusData);
                 
-                // Verifica se o foco foi solicitado nos últimos 5 segundos
+
                 if (new Date().getTime() - timestamp < 5000) {
-                    // Remove o item do localStorage
+
                     localStorage.removeItem('watchtower_focus_location');
                     
-                    // Foca no ponto com animação suave
+
                     map.setView([lat, lng], 12, {
                         animate: true,
                         duration: 1
                     });
 
-                    // Procura por um marcador existente nessa posição
                     const markers = [];
                     map.eachLayer((layer) => {
                         if (layer instanceof L.Marker) {
@@ -566,7 +760,6 @@
                         }
                     });
 
-                    // Se encontrar um marcador, abre seu popup
                     if (markers.length > 0) {
                         setTimeout(() => {
                             markers[0].openPopup();
@@ -579,7 +772,6 @@
         }
     }
 
-    // Verifica a localização de foco quando a página carrega
     checkForFocusLocation();
 
     let savedReports = [];
@@ -627,8 +819,7 @@
         reportsList.insertBefore(reportCard, reportsList.firstChild);
         reportCard.style.opacity = '0';
         setTimeout(() => reportCard.style.opacity = '1', 10);
-        
-        // Salva o relatório para a página de relatórios
+
         savedReports.unshift({
             timestamp: new Date(),
             content: point.aiAnalysis,
@@ -639,23 +830,22 @@
             }
         });
         
-        // Limita o número de relatórios salvos
+
         if (savedReports.length > 100) {
             savedReports.pop();
         }
         
-        // Limita o número de relatórios exibidos
+
         const maxReports = 50;
         const reports = reportsList.getElementsByClassName('report-card');
         if (reports.length > maxReports) {
             reportsList.removeChild(reports[reports.length - 1]);
         }
 
-        // Armazena os relatórios no localStorage
+
         localStorage.setItem('watchtower_reports', JSON.stringify(savedReports));
     }
 
-    // Carrega relatórios salvos ao iniciar
     try {
         const saved = localStorage.getItem('watchtower_reports');
         if (saved) {
@@ -664,25 +854,6 @@
     } catch (error) {
         console.error('Erro ao carregar relatórios salvos:', error);
     }
-
-    stompClient.connect({}, function(frame) {
-        console.log('STOMP: Conectado ao WebSocket', frame);
-        
-        stompClient.subscribe('/topic/risk-points', function(message) {
-            console.log('STOMP: Mensagem recebida raw:', message.body);
-            try {
-                const point = JSON.parse(message.body);
-                console.log('STOMP: Ponto de risco parseado:', point);
-                addMarker(point);
-                addReport(point);
-            } catch (error) {
-                console.error('Erro ao processar mensagem:', error);
-            }
-        });
-    }, function(error) {
-        console.error('STOMP: Erro na conexão', error);
-    });
-
 
 </script>
 

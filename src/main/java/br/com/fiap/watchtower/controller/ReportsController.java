@@ -10,7 +10,6 @@ public class ReportsController {
 
     @GetMapping("/reports")
     public String reports(Model model, Authentication authentication) {
-        // Adiciona o nome do usuário ao modelo
         if (authentication != null) {
             String name = authentication.getName();
             model.addAttribute("name", name);

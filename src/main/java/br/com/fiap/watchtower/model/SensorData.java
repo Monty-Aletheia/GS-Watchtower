@@ -11,6 +11,24 @@ public class SensorData {
     private double luminosidade;
     private String evento;
 
+    public SensorData(double temperatura,
+                      double umidade,
+                      double pressao,
+                      double vento,
+                      double chuva,
+                      double nivelAgua,
+                      double gases,
+                      double luminosidade) {
+        this.temperatura = temperatura;
+        this.umidade = umidade;
+        this.pressao = pressao;
+        this.vento = vento;
+        this.chuva = chuva;
+        this.nivelAgua = nivelAgua;
+        this.gases = gases;
+        this.luminosidade = luminosidade;
+    }
+
     // Getters e Setters
     public double getTemperatura() {
         return temperatura;

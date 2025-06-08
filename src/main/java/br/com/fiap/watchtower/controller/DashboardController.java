@@ -1,77 +1,56 @@
 package br.com.fiap.watchtower.controller;
 
 import br.com.fiap.watchtower.model.User;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import br.com.fiap.watchtower.service.MarkersService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Controller
 public class DashboardController {
 
+    private static final Logger logger = LoggerFactory.getLogger(DashboardController.class);
+
+    @Autowired
+    private MarkersService markersService;
+
     @GetMapping("/dashboard")
-    public String showDashboard(Model model) throws JsonProcessingException {
-//        List<Map<String, Object>> pontos = new ArrayList<>();
-//
-//        Map<String, Object> p1 = Map.of(
-//                "latitude", -23.5505,
-//                "longitude", -46.6333,
-//                "description", "São Paulo",
-//                "riskLevel", "MEDIUM"
-//        );
-//
-//        Map<String, Object> p2 = Map.of(
-//                "latitude", -22.9068,
-//                "longitude", -43.1729,
-//                "description", "Rio de Janeiro",
-//                "riskLevel", "MEDIUM"
-//        );
-//
-//        Map<String, Object> p3 = Map.of(
-//                "latitude", -15.7939,
-//                "longitude", -47.8828,
-//                "description", "Brasília",
-//                "riskLevel", "MEDIUM"
-//        );
-//
-//        pontos.add(p1);
-//        pontos.add(p2);
-//        pontos.add(p3);
-//
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        String pontosJson = objectMapper.writeValueAsString(pontos);
-//        model.addAttribute("pontos", pontosJson);
+    public String showDashboard(Model model) {
+        logger.info("Acessando o dashboard");
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        try {
+            new Thread(() -> {
+                try {
+                    logger.info("Iniciando carregamento dos marcadores");
+                    markersService.loadAllMarkers();
+                    logger.info("Marcadores carregados com sucesso");
+                } catch (Exception e) {
+                    logger.error("Erro ao carregar marcadores: {}", e.getMessage(), e);
+                }
+            }).start();
 
-        if (authentication != null && authentication.isAuthenticated()) {
-            Object principal = authentication.getPrincipal();
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String name = "Usuário";
 
-            if (principal instanceof OAuth2User oauthUser) {
-                List<String> fullName = List.of(oauthUser.getAttributes().get("name").toString().split(" "));
-                String name = fullName.size() >= 2 ? fullName.get(0) + " " + fullName.get(1) : fullName.get(0);
-                model.addAttribute("name", name);
-                model.addAttribute("photo", oauthUser.getAttributes().get("picture"));
-            } else if (principal instanceof User user) {
-                model.addAttribute("name", user.getName());
-            } else {
-                String username = authentication.getName();
-                model.addAttribute("name", username);
-                model.addAttribute("photo", "/img/default-user.png");
+            if (authentication != null && authentication.getPrincipal() instanceof OAuth2User) {
+                OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
+                name = oauth2User.getAttribute("name");
+                logger.info("Usuário autenticado: {}", name);
             }
-        } else {
-            model.addAttribute("name", "Visitante");
-            model.addAttribute("photo", "/img/default-user.png");
-        }
 
-        return "dashboard";
+            model.addAttribute("name", name);
+            return "dashboard";
+        } catch (Exception e) {
+            logger.error("Erro ao renderizar dashboard: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 }

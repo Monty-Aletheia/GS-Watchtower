@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>The WatchTower - Cadastro</title>
+    <title th:text="#{app.title} + ' - ' + #{register.title}">The WatchTower - Cadastro</title>
     <link rel="icon" href="/images/favicon.png" type="image/png">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -152,33 +152,36 @@
 
     <div class="form-side">
         <form class="form-card" th:action="@{/register}" method="post" th:object="${user}">
-            <h1>Crie sua conta</h1>
+            <h1 th:text="#{register.title}">Crie sua conta</h1>
 
             <a th:href="@{/oauth2/authorization/google}" class="google-btn">
                 <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" alt="Google" width="20">
-                Inscreva-se com Google
+                <span th:text="#{register.with.google}">Inscreva-se com Google</span>
             </a>
 
             <div class="separator">ou</div>
 
             <div class="input-group">
-                <input type="text" th:field="*{name}" placeholder="Nome">
+                <input type="text" th:field="*{name}" th:placeholder="#{register.name}">
                 <span class="error-message" th:if="${#fields.hasErrors('name')}" th:text="${#fields.errors('name')[0]}"></span>
             </div>
 
             <div class="input-group">
-                <input type="email" th:field="*{email}" placeholder="E-mail">
+                <input type="email" th:field="*{email}" th:placeholder="#{register.email}">
                 <span class="error-message" th:if="${#fields.hasErrors('email')}" th:text="${#fields.errors('email')[0]}"></span>
             </div>
 
             <div class="input-group">
-                <input type="password" th:field="*{password}" placeholder="Senha">
+                <input type="password" th:field="*{password}" th:placeholder="#{register.password}">
                 <span class="error-message" th:if="${#fields.hasErrors('password')}" th:text="${#fields.errors('password')[0]}"></span>
             </div>
 
-            <button type="submit" class="submit-btn">Cadastrar</button>
+            <button type="submit" class="submit-btn" th:text="#{register.submit}">Cadastrar</button>
 
-            <p class="login-link">Já tem uma conta? <a href="/login">Entrar</a></p>
+            <p class="login-link">
+                <span th:text="#{register.has.account}">Já tem uma conta?</span> 
+                <a href="/login" th:text="#{register.login}">Entrar</a>
+            </p>
         </form>
     </div>
 </div>

@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
 <head>
-    <title>Relatórios - The Watchtower</title>
+    <title th:text="#{reports.title} + ' - ' + #{app.title}">Relatórios - The Watchtower</title>
     <meta charset="utf-8">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
     <link rel="icon" href="/images/favicon.png" type="image/png">
@@ -223,14 +223,14 @@
 
 <div class="sidebar">
     <div>
-        <img class="logo" src="/images/logo-no-background.png" alt="Watchtower">
+        <img class="logo" src="/images/logo-no-background.png" th:alt="#{app.title}">
         <nav>
-            <a href="/dashboard">Mapa</a>
-            <a href="/reports" style="background: rgba(255, 255, 255, 0.2);">Relatórios</a>
-            <a href="#">Configurações</a>
+            <a href="/dashboard" th:text="#{menu.home}">Mapa</a>
+            <a href="/reports" style="background: rgba(255, 255, 255, 0.2);" th:text="#{menu.reports}">Relatórios</a>
+            <a href="#" th:text="#{menu.settings}">Configurações</a>
             <form th:action="@{/logout}" method="post" style="margin: 10px 0;">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                <button type="submit" class="logout-btn">
+                <button type="submit" class="logout-btn" th:text="#{menu.logout}">
                     Sair
                 </button>
             </form>
@@ -238,37 +238,48 @@
     </div>
 
     <div>
-        <p>Versão 1.0</p>
+        <p th:text="#{reports.version}">Versão 1.0</p>
     </div>
 </div>
 
 <div class="main-content">
-    <div class="header">Relatórios de Incidentes</div>
+    <div class="header" th:text="#{reports.title}">Relatórios de Incidentes</div>
 
     <div class="filters">
-        <button class="filter-btn active" data-risk="ALL">Todos</button>
-        <button class="filter-btn" data-risk="LOW">Baixo Risco</button>
-        <button class="filter-btn" data-risk="MEDIUM">Médio Risco</button>
-        <button class="filter-btn" data-risk="HIGH">Alto Risco</button>
-        <button class="filter-btn" data-risk="CRITICAL">Crítico</button>
+        <button class="filter-btn active" data-risk="ALL" th:text="#{reports.filter.all}">Todos</button>
+        <button class="filter-btn" data-risk="LOW" th:text="#{reports.filter.low}">Baixo Risco</button>
+        <button class="filter-btn" data-risk="MEDIUM" th:text="#{reports.filter.medium}">Médio Risco</button>
+        <button class="filter-btn" data-risk="HIGH" th:text="#{reports.filter.high}">Alto Risco</button>
+        <button class="filter-btn" data-risk="CRITICAL" th:text="#{reports.filter.critical}">Crítico</button>
     </div>
 
     <div class="reports-grid" id="reports-grid">
-        <div class="no-reports">Nenhum relatório encontrado</div>
+        <div class="no-reports" th:text="#{reports.no.data}">Nenhum relatório encontrado</div>
     </div>
 </div>
 
-<script>
+<script th:inline="javascript">
+    // Traduções
+    const translations = {
+        noReports: /*[[#{reports.no.data}]]*/ 'Nenhum relatório encontrado',
+        noReportsFilter: /*[[#{reports.no.data}]]*/ 'Nenhum relatório encontrado para este filtro',
+        noAnalysis: /*[[#{dashboard.loading}]]*/ 'Análise em processamento...',
+        viewOnMap: /*[[#{button.view.on.map}]]*/ 'Ver no Mapa →',
+        riskLevels: {
+            LOW: /*[[#{dashboard.risk.low}]]*/ 'Baixo',
+            MEDIUM: /*[[#{dashboard.risk.medium}]]*/ 'Médio',
+            HIGH: /*[[#{dashboard.risk.high}]]*/ 'Alto',
+            CRITICAL: /*[[#{dashboard.risk.critical}]]*/ 'Crítico'
+        }
+    };
+
     // Função para redirecionar para o mapa com as coordenadas
     function viewOnMap(lat, lng) {
-        // Salva as coordenadas no localStorage para serem lidas pelo dashboard
         localStorage.setItem('watchtower_focus_location', JSON.stringify({
             lat: lat,
             lng: lng,
             timestamp: new Date().getTime()
         }));
-        
-        // Redireciona para o dashboard
         window.location.href = '/dashboard';
     }
 
@@ -280,8 +291,7 @@
         reportsGrid.innerHTML = '';
         
         if (!saved) {
-            reportsGrid.innerHTML = '<div class="no-reports">Nenhum relatório encontrado</div>';
-
+            reportsGrid.innerHTML = `<div class="no-reports">${translations.noReports}</div>`;
             return;
         }
 
@@ -292,7 +302,7 @@
                 : reports.filter(r => r.riskLevel === filter);
 
             if (filteredReports.length === 0) {
-                reportsGrid.innerHTML = '<div class="no-reports">Nenhum relatório encontrado para este filtro</div>';
+                reportsGrid.innerHTML = `<div class="no-reports">${translations.noReportsFilter}</div>`;
                 return;
             }
 
@@ -308,19 +318,19 @@
                 
                 card.innerHTML = `
                     <div class="report-timestamp">${timestamp.toLocaleString()}</div>
-                    <span class="risk-badge ${report.riskLevel}">${report.riskLevel}</span>
-                    <div class="report-content">${report.content || 'Sem análise disponível'}</div>
+                    <span class="risk-badge ${report.riskLevel}">${translations.riskLevels[report.riskLevel]}</span>
+                    <div class="report-content">${report.content || translations.noAnalysis}</div>
                     <div class="report-location">
                         📍 Lat: ${report.location.lat.toFixed(6)}, Lng: ${report.location.lng.toFixed(6)}
                     </div>
-                    <div class="view-on-map">Ver no Mapa →</div>
+                    <div class="view-on-map">${translations.viewOnMap}</div>
                 `;
 
                 reportsGrid.appendChild(card);
             });
         } catch (error) {
             console.error('Erro ao carregar relatórios:', error);
-            reportsGrid.innerHTML = '<div class="no-reports">Erro ao carregar relatórios</div>';
+            reportsGrid.innerHTML = `<div class="no-reports">${translations.noReports}</div>`;
         }
     }
 

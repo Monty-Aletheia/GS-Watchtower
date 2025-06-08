@@ -20,6 +20,11 @@ public class RabbitMQConfig {
         return new Queue(QUEUE_RISK_EVENTS);
     }
 
+    @Bean
+    public Queue markerQueue() {
+        return new Queue("create-marker-info");
+    }
+
 //    @Bean
 //    public TopicExchange exchange() {
 //        return new TopicExchange(EXCHANGE_RISK_EVENTS);
