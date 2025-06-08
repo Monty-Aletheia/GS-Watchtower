@@ -86,6 +86,12 @@
             background: #ccc;
         }
 
+        .separator::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid #ddd;
+        }
+
         .input-group {
             display: flex;
             flex-direction: column;
@@ -143,6 +149,116 @@
             text-decoration: underline;
         }
 
+        /* Estilos do footer e seletor de idioma */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .language-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .language-btn {
+            color: #666;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 500;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            background: white;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .language-btn::after {
+            content: '▼';
+            font-size: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .language-btn.active::after {
+            transform: rotate(180deg);
+        }
+
+        .language-btn:hover {
+            border-color: #FF3D2E;
+            color: #FF3D2E;
+        }
+
+        .language-dropdown-content {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            margin-bottom: 5px;
+            background: white;
+            min-width: 120px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1);
+            border-radius: 6px;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .language-dropdown-content.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .language-dropdown-content a {
+            color: #666;
+            padding: 10px 15px;
+            text-decoration: none;
+            display: block;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid #eee;
+        }
+
+        .language-dropdown-content a:last-child {
+            border-bottom: none;
+        }
+
+        .language-dropdown-content a:hover {
+            background-color: #f8f8f8;
+            color: #FF3D2E;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .image-side {
+                height: 200px;
+                margin: 20px 0;
+            }
+
+            .form-side {
+                padding: 20px;
+            }
+
+            .footer {
+                width: 100%;
+                justify-content: center;
+                background: white;
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            }
+        }
     </style>
 </head>
 <body>
@@ -185,6 +301,62 @@
         </form>
     </div>
 </div>
+
+<!-- Footer com seletor de idioma -->
+<div class="footer">
+    <div class="language-dropdown">
+        <button class="language-btn" onclick="toggleLanguageDropdown(this)" th:text="#{button.language}">Idioma</button>
+        <div class="language-dropdown-content" id="languageDropdown">
+            <a href="?lang=pt" th:text="Português">Português</a>
+            <a href="?lang=en" th:text="English">English</a>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleLanguageDropdown(btn) {
+    const dropdown = document.getElementById('languageDropdown');
+    const allDropdowns = document.querySelectorAll('.language-dropdown-content');
+    const allButtons = document.querySelectorAll('.language-btn');
+    
+    // Fecha todos os outros dropdowns
+    allDropdowns.forEach(drop => {
+        if (drop !== dropdown && drop.classList.contains('show')) {
+            drop.classList.remove('show');
+        }
+    });
+    
+    allButtons.forEach(button => {
+        if (button !== btn && button.classList.contains('active')) {
+            button.classList.remove('active');
+        }
+    });
+    
+    // Toggle do dropdown atual
+    dropdown.classList.toggle('show');
+    btn.classList.toggle('active');
+}
+
+// Fecha o dropdown quando clicar fora
+window.onclick = function(event) {
+    if (!event.target.matches('.language-btn')) {
+        const dropdowns = document.querySelectorAll('.language-dropdown-content');
+        const buttons = document.querySelectorAll('.language-btn');
+        
+        dropdowns.forEach(dropdown => {
+            if (dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+            }
+        });
+        
+        buttons.forEach(button => {
+            if (button.classList.contains('active')) {
+                button.classList.remove('active');
+            }
+        });
+    }
+}
+</script>
 
 </body>
 </html>

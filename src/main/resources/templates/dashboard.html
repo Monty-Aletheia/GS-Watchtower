@@ -421,6 +421,87 @@
             background: #ff2415;
         }
 
+        /* Estilos para o dropdown de idioma */
+        .language-dropdown {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .language-btn {
+            color: black;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .language-btn::after {
+            content: '▼';
+            font-size: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .language-btn.active::after {
+            transform: rotate(180deg);
+        }
+
+        .language-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        .language-dropdown-content {
+            display: none;
+            position: absolute;
+            background: linear-gradient(135deg, #FF3D2E, #FF6F3D);
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1000;
+            border-radius: 8px;
+            overflow: hidden;
+            width: 100%;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .language-dropdown-content.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .language-dropdown-content a {
+            color: white;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .language-dropdown-content a:last-child {
+            border-bottom: none;
+        }
+
+        .language-dropdown-content a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px) !important;
+        }
+
     </style>
 </head>
 <body>
@@ -433,7 +514,16 @@
         <nav>
             <a class="menu-item" style="background: rgba(255, 255, 255, 0.2);" href="#" th:text="#{menu.home}">Mapa</a>
             <a class="menu-item" href="/reports" th:text="#{menu.reports}">Relatórios</a>
-            <a class="menu-item" href="#" th:text="#{menu.settings}">Configurações</a>
+            
+            <!-- Dropdown de Idioma -->
+            <div class="language-dropdown">
+                <button class="language-btn" onclick="toggleLanguageDropdown(this)" th:text="#{button.language}">Idioma</button>
+                <div class="language-dropdown-content" id="languageDropdown">
+                    <a href="?lang=pt" th:text="Português">Português</a>
+                    <a href="?lang=en" th:text="English">English</a>
+                </div>
+            </div>
+
             <form th:action="@{/logout}" method="post" style="margin: 10px 0;">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                 <button type="submit" class="logout-btn" th:text="#{menu.logout}">
@@ -1077,6 +1167,51 @@
 
     connect();
 
+</script>
+
+<script>
+function toggleLanguageDropdown(btn) {
+    const dropdown = document.getElementById('languageDropdown');
+    const allDropdowns = document.querySelectorAll('.language-dropdown-content');
+    const allButtons = document.querySelectorAll('.language-btn');
+    
+    // Fecha todos os outros dropdowns
+    allDropdowns.forEach(drop => {
+        if (drop !== dropdown && drop.classList.contains('show')) {
+            drop.classList.remove('show');
+        }
+    });
+    
+    allButtons.forEach(button => {
+        if (button !== btn && button.classList.contains('active')) {
+            button.classList.remove('active');
+        }
+    });
+    
+    // Toggle do dropdown atual
+    dropdown.classList.toggle('show');
+    btn.classList.toggle('active');
+}
+
+// Fecha o dropdown quando clicar fora
+window.onclick = function(event) {
+    if (!event.target.matches('.language-btn')) {
+        const dropdowns = document.querySelectorAll('.language-dropdown-content');
+        const buttons = document.querySelectorAll('.language-btn');
+        
+        dropdowns.forEach(dropdown => {
+            if (dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+            }
+        });
+        
+        buttons.forEach(button => {
+            if (button.classList.contains('active')) {
+                button.classList.remove('active');
+            }
+        });
+    }
+}
 </script>
 
 </body>
