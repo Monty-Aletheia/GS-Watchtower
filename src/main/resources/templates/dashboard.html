@@ -263,27 +263,29 @@
         }
 
         .marker-popup {
-            min-width: 300px;
-            max-width: 400px;
-            padding: 15px;
+            min-width: 250px;
+            max-width: 350px;
+            padding: 12px;
+            font-size: 13px;
         }
 
         .marker-popup h3 {
-            margin: 0 0 12px;
+            margin: 0 0 8px;
             color: #FF3D2E;
-            font-size: 16px;
-            border-bottom: 2px solid #FF3D2E;
-            padding-bottom: 8px;
+            font-size: 14px;
+            border-bottom: 1px solid #FF3D2E;
+            padding-bottom: 6px;
             word-wrap: break-word;
+            white-space: normal;
         }
 
         .marker-popup .risk-badge {
             display: inline-block;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 13px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 12px;
             font-weight: bold;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
 
         .risk-badge.LOW { background: #4CAF50; color: white; }
@@ -291,34 +293,56 @@
         .risk-badge.HIGH { background: #FF5722; color: white; }
         .risk-badge.CRITICAL { background: #F44336; color: white; }
 
+        .marker-popup .ai-analysis {
+            margin: 8px 0;
+        }
+
+        .marker-popup .ai-label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #666;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .marker-popup .ai-icon {
+            color: #FF3D2E;
+        }
+
         .marker-popup .analysis {
-            font-size: 14px;
-            line-height: 1.5;
-            margin: 12px 0;
-            white-space: pre-wrap;
+            font-size: 12px;
+            line-height: 1.4;
+            margin: 4px 0;
+            white-space: normal;
             word-wrap: break-word;
+            max-height: 150px;
+            overflow-y: auto;
+            color: #333;
         }
 
         .marker-popup .timestamp {
-            font-size: 12px;
+            font-size: 11px;
             color: #666;
-            margin-top: 12px;
+            margin-top: 8px;
             border-top: 1px solid #eee;
-            padding-top: 8px;
+            padding-top: 6px;
         }
 
         .marker-popup .sensor-data {
-            margin: 12px 0;
-            padding: 12px;
+            margin: 8px 0;
+            padding: 8px;
             background: #f8f9fa;
-            border-radius: 8px;
+            border-radius: 6px;
             border: 1px solid #eee;
+            font-size: 12px;
         }
 
         .marker-popup .sensor-data h4 {
-            margin: 0 0 8px 0;
+            margin: 0 0 6px 0;
             color: #666;
-            font-size: 14px;
+            font-size: 12px;
         }
 
         .marker-popup .sensor-data ul {
@@ -326,26 +350,31 @@
             margin: 0;
             padding: 0;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 8px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4px;
         }
 
         .marker-popup .sensor-data li {
-            font-size: 13px;
+            font-size: 11px;
             color: #333;
-            padding: 4px 8px;
+            padding: 3px 6px;
             background: white;
-            border-radius: 4px;
+            border-radius: 3px;
             border: 1px solid #eee;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .marker-popup .description {
-            margin: 12px 0;
-            padding: 8px;
+            margin: 8px 0;
+            padding: 6px;
             background: #fff3e0;
             border-radius: 4px;
-            font-size: 14px;
+            font-size: 12px;
             color: #333;
+            white-space: normal;
+            word-wrap: break-word;
         }
 
         @keyframes pulse {
@@ -513,45 +542,86 @@
 
     function createPopupContent(point) {
         const riskLevel = point.riskLevel || 'MEDIUM';
-        const timestamp = point.timestamp ? new Date(point.timestamp).toLocaleString() : '';
+        
+        // Tratamento mais robusto para a data
+        let formattedDate = '';
+        if (point.timestamp) {
+            try {
+                // Tenta converter para número se for string
+                const timestamp = typeof point.timestamp === 'string' ? 
+                    parseInt(point.timestamp) : point.timestamp;
+                
+                const date = new Date(timestamp);
+                if (!isNaN(date.getTime())) {
+                    formattedDate = date.toLocaleString('pt-BR', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+            } catch (e) {
+                console.error('Erro ao formatar data:', e);
+            }
+        }
+
         const desasterType = point.desasterType ? point.desasterType.charAt(0).toUpperCase() + point.desasterType.slice(1) : '';
         
         let sensorInfo = '';
         if (point.sensorData) {
             const sd = point.sensorData;
-            sensorInfo = `
-                <div class="sensor-data">
-                    <h4>Dados do Sensor:</h4>
-                    <ul>
-                        ${sd.temperatura ? `<li>Temperatura: ${sd.temperatura}°C</li>` : ''}
-                        ${sd.umidade ? `<li>Umidade: ${sd.umidade}%</li>` : ''}
-                        ${sd.pressao ? `<li>Pressão: ${sd.pressao} hPa</li>` : ''}
-                        ${sd.vento ? `<li>Vento: ${sd.vento} km/h</li>` : ''}
-                        ${sd.chuva ? `<li>Chuva: ${sd.chuva} mm</li>` : ''}
-                        ${sd.nivelAgua ? `<li>Nível da Água: ${sd.nivelAgua} m</li>` : ''}
-                        ${sd.gases ? `<li>Gases: ${sd.gases} ppm</li>` : ''}
-                        ${sd.luminosidade ? `<li>Luminosidade: ${sd.luminosidade} lux</li>` : ''}
-                    </ul>
-                </div>
-            `;
+            const sensorItems = [];
+            
+            if (sd.temperatura) sensorItems.push(`Temp: ${sd.temperatura}°C`);
+            if (sd.umidade) sensorItems.push(`Umid: ${sd.umidade}%`);
+            if (sd.pressao) sensorItems.push(`Pres: ${sd.pressao}hPa`);
+            if (sd.vento) sensorItems.push(`Vento: ${sd.vento}km/h`);
+            if (sd.chuva) sensorItems.push(`Chuva: ${sd.chuva}mm`);
+            if (sd.nivelAgua) sensorItems.push(`Água: ${sd.nivelAgua}m`);
+            if (sd.gases) sensorItems.push(`Gases: ${sd.gases}ppm`);
+            if (sd.luminosidade) sensorItems.push(`Luz: ${sd.luminosidade}lx`);
+
+            if (sensorItems.length > 0) {
+                sensorInfo = `
+                    <div class="sensor-data">
+                        <h4>Dados do Sensor:</h4>
+                        <ul>
+                            ${sensorItems.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
         }
         
+        const description = point.description ? `
+            <div class="description">${point.description}</div>
+        ` : '';
+
+        const analysis = point.aiAnalysis ? `
+            <div class="ai-analysis">
+                <div class="ai-label">
+                    <svg class="ai-icon" viewBox="0 0 24 24" width="16" height="16">
+                        <path fill="currentColor" d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M12,6.5A5.5,5.5 0 0,1 17.5,12A5.5,5.5 0 0,1 12,17.5A5.5,5.5 0 0,1 6.5,12A5.5,5.5 0 0,1 12,6.5M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9Z" />
+                    </svg>
+                    Resumo da IA
+                </div>
+                <div class="analysis">${point.aiAnalysis}</div>
+            </div>
+        ` : '';
+
         return `
             <div class="marker-popup">
                 <h3>${desasterType || translations.noDescription}</h3>
                 <span class="risk-badge ${riskLevel}">${translations.riskLevels[riskLevel]}</span>
-                ${point.description ? `
-                    <div class="description">${point.description}</div>
-                ` : ''}
-                ${point.aiAnalysis ? `
-                    <div class="analysis">${point.aiAnalysis}</div>
-                ` : ''}
-                ${sensorInfo}
-                ${timestamp ? `
+                ${description}
+                ${analysis}
+                ${formattedDate ? `
                     <div class="timestamp">
-                        <i class="fas fa-clock"></i> ${timestamp}
+                        ${formattedDate}
                     </div>
                 ` : ''}
+                ${sensorInfo}
             </div>
         `;
     }
@@ -582,16 +652,17 @@
                 icon: icon
             })
             .bindPopup(createPopupContent(point), {
-                maxWidth: 400,
-                minWidth: 300,
+                maxWidth: 350,
+                minWidth: 250,
                 autoPan: true,
-                autoPanPadding: [50, 50],
+                autoPanPadding: [20, 20],
                 closeButton: true,
                 className: 'custom-popup',
                 offset: [0, -10],
                 keepInView: true,
                 direction: 'auto',
-                interactive: true
+                interactive: true,
+                maxHeight: 300
             });
 
             marker.on('add', function() {
@@ -629,6 +700,7 @@
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 5;
     const reconnectDelay = 2000; // 2 segundos
+    let stompSubscriptions = [];
 
     function connect() {
         socket.onopen = function() {
@@ -651,55 +723,80 @@
         };
 
         stompClient.connect({}, function(frame) {
-            console.log('STOMP: Conectado ao WebSocket', frame);
-
+            console.log('STOMP: Conectado');
+            reconnectAttempts = 0;
             subscribeToTopics();
-
         }, function(error) {
-            console.error('STOMP: Erro na conexão', error);
+            console.error('STOMP: Erro na conexão:', error);
             tryReconnect();
         });
     }
 
     function subscribeToTopics() {
-        stompClient.subscribe('/topic/risk-points', function(message) {
-            console.log('STOMP: Mensagem recebida raw:', message.body);
-            try {
-                const point = JSON.parse(message.body);
-                console.log('STOMP: Ponto de risco parseado:', point);
-                addMarker(point);
-                addReport(point);
-            } catch (error) {
-                console.error('Erro ao processar mensagem:', error);
+        // Limpa subscrições anteriores
+        stompSubscriptions.forEach(sub => sub.unsubscribe());
+        stompSubscriptions = [];
+
+        // Limpa marcadores existentes
+        map.eachLayer((layer) => {
+            if (layer instanceof L.Marker) {
+                map.removeLayer(layer);
             }
         });
 
-        stompClient.subscribe('/topic/markers', function(message) {
-            console.log('STOMP: Lista de markers recebida:', message.body);
-            try {
-                const response = JSON.parse(message.body);
-                console.log('STOMP: Lista de markers parseada:', response);
-                
-                // Limpa marcadores existentes antes de adicionar novos
-                map.eachLayer((layer) => {
-                    if (layer instanceof L.Marker) {
-                        map.removeLayer(layer);
-                    }
-                });
+        // Limpa reports existentes
+        const reportsList = document.getElementById('reports-list');
+        reportsList.innerHTML = `<div class="report-loading">${translations.loading}</div>`;
+        savedReports = [];
 
-                if (Array.isArray(response)) {
-                    response.forEach(point => {
-                        console.log('Processando marker:', point);
-                        addMarker(point);
-                        addReport(point);
-                    });
-                } else {
-                    console.error('Resposta não é um array:', response);
+        // Subscreve aos tópicos
+        stompSubscriptions.push(
+            stompClient.subscribe('/topic/risk-points', function(message) {
+                console.log('STOMP: Mensagem recebida raw:', message.body);
+                try {
+                    const point = JSON.parse(message.body);
+                    console.log('STOMP: Ponto de risco parseado:', point);
+                    addMarker(point);
+                    addReport(point);
+                } catch (error) {
+                    console.error('Erro ao processar mensagem:', error);
                 }
-            } catch (error) {
-                console.error('Erro ao processar lista de markers:', error);
-            }
-        });
+            })
+        );
+
+        stompSubscriptions.push(
+            stompClient.subscribe('/topic/markers', function(message) {
+                console.log('STOMP: Lista de markers recebida:', message.body);
+                try {
+                    const response = JSON.parse(message.body);
+                    console.log('STOMP: Lista de markers parseada:', response);
+                    
+                    // Limpa marcadores existentes antes de adicionar novos
+                    map.eachLayer((layer) => {
+                        if (layer instanceof L.Marker) {
+                            map.removeLayer(layer);
+                        }
+                    });
+
+                    // Limpa reports existentes antes de adicionar novos
+                    const reportsList = document.getElementById('reports-list');
+                    reportsList.innerHTML = '';
+                    savedReports = [];
+
+                    if (Array.isArray(response)) {
+                        response.forEach(point => {
+                            console.log('Processando marker:', point);
+                            addMarker(point);
+                            addReport(point);
+                        });
+                    } else {
+                        console.error('Resposta não é um array:', response);
+                    }
+                } catch (error) {
+                    console.error('Erro ao processar lista de markers:', error);
+                }
+            })
+        );
     }
 
     function tryReconnect() {
@@ -725,13 +822,20 @@
     }
 
     function resetAndReconnect() {
+        // Limpa subscrições existentes
+        stompSubscriptions.forEach(sub => {
+            try {
+                sub.unsubscribe();
+            } catch (e) {
+                console.error('Erro ao cancelar subscrição:', e);
+            }
+        });
+        stompSubscriptions = [];
+
+        // Reseta tentativas e reconecta
         reconnectAttempts = 0;
         connect();
     }
-
-
-    connect();
-
 
     function checkForFocusLocation() {
         try {
@@ -774,19 +878,28 @@
 
     checkForFocusLocation();
 
-    let savedReports = [];
-
     function addReport(point) {
         const reportsList = document.getElementById('reports-list');
-        const loadingElement = reportsList.querySelector('.report-loading');
         
+        // Remove mensagem de loading se existir
+        const loadingElement = reportsList.querySelector('.report-loading');
         if (loadingElement) {
             loadingElement.remove();
+        }
+
+        // Verifica se o report já existe
+        const existingReports = reportsList.getElementsByClassName('report-card');
+        for (let i = 0; i < existingReports.length; i++) {
+            const report = existingReports[i];
+            if (report.getAttribute('data-id') === String(point.id)) {
+                return; // Report já existe, não adiciona novamente
+            }
         }
 
         const reportCard = document.createElement('div');
         reportCard.className = 'report-card';
         reportCard.setAttribute('data-risk', point.riskLevel || 'MEDIUM');
+        reportCard.setAttribute('data-id', point.id); // Adiciona ID para controle de duplicação
         
         const closeBtn = document.createElement('button');
         closeBtn.className = 'close-btn';
@@ -794,12 +907,14 @@
         closeBtn.onclick = function() {
             reportCard.style.opacity = '0';
             setTimeout(() => {
-                reportsList.removeChild(reportCard);
-                if (reportsList.children.length === 0) {
-                    const loadingDiv = document.createElement('div');
-                    loadingDiv.className = 'report-loading';
-                    loadingDiv.textContent = 'Aguardando novos eventos...';
-                    reportsList.appendChild(loadingDiv);
+                if (reportsList.contains(reportCard)) {
+                    reportsList.removeChild(reportCard);
+                    if (reportsList.children.length === 0) {
+                        const loadingDiv = document.createElement('div');
+                        loadingDiv.className = 'report-loading';
+                        loadingDiv.textContent = translations.loading;
+                        reportsList.appendChild(loadingDiv);
+                    }
                 }
             }, 200);
         };
@@ -810,7 +925,7 @@
         
         const content = document.createElement('div');
         content.className = 'report-content';
-        content.textContent = point.aiAnalysis || 'Análise em processamento...';
+        content.textContent = point.aiAnalysis || translations.noAnalysis;
         
         reportCard.appendChild(closeBtn);
         reportCard.appendChild(timestamp);
@@ -820,40 +935,147 @@
         reportCard.style.opacity = '0';
         setTimeout(() => reportCard.style.opacity = '1', 10);
 
-        savedReports.unshift({
-            timestamp: new Date(),
-            content: point.aiAnalysis,
-            riskLevel: point.riskLevel || 'MEDIUM',
-            location: {
-                lat: point.latitude,
-                lng: point.longitude
+        // Atualiza savedReports apenas se o report não existir
+        const reportExists = savedReports.some(r => r.id === point.id);
+        if (!reportExists) {
+            savedReports.unshift({
+                id: point.id,
+                timestamp: new Date(),
+                content: point.aiAnalysis,
+                riskLevel: point.riskLevel || 'MEDIUM',
+                location: {
+                    lat: point.latitude,
+                    lng: point.longitude
+                }
+            });
+
+            // Mantém apenas os últimos 100 reports
+            if (savedReports.length > 100) {
+                savedReports.pop();
             }
-        });
-        
 
-        if (savedReports.length > 100) {
-            savedReports.pop();
+            // Atualiza localStorage
+            localStorage.setItem('watchtower_reports', JSON.stringify(savedReports));
         }
-        
 
+        // Limita o número de reports visíveis
         const maxReports = 50;
         const reports = reportsList.getElementsByClassName('report-card');
         if (reports.length > maxReports) {
             reportsList.removeChild(reports[reports.length - 1]);
         }
-
-
-        localStorage.setItem('watchtower_reports', JSON.stringify(savedReports));
     }
 
-    try {
-        const saved = localStorage.getItem('watchtower_reports');
-        if (saved) {
-            savedReports = JSON.parse(saved);
+    // Inicialização dos dados
+    const initialReports = [
+        {
+            "timestamp": "2025-06-08T05:13:55.264Z",
+            "content": "Risco crítico de deslizamento detectado em Salvador. Recomenda-se a evacuação imediata das áreas de risco, monitoramento contínuo das condições meteorológicas e mobilização de equipes de emergência.",
+            "riskLevel": "MEDIUM",
+            "location": {
+                "lat": -12.9711,
+                "lng": -38.5108
+            }
+        },
+        {
+            "timestamp": "2025-06-08T05:13:55.263Z",
+            "content": "Risco crítico de enchente detectado na área de Recife. Recomenda-se evacuação imediata das áreas afetadas e monitoramento contínuo do nível de água.",
+            "riskLevel": "CRITICAL",
+            "location": {
+                "lat": -8.05,
+                "lng": -34.9
+            }
+        },
+        {
+            "timestamp": "2025-06-08T05:13:55.262Z",
+            "content": "Risco crítico de enchente detectado em Manaus. É necessário emitir alertas para a população, evacuar áreas de risco e preparar equipes de emergência para intervenções imediatas.",
+            "riskLevel": "CRITICAL",
+            "location": {
+                "lat": -3.101944,
+                "lng": -60.025
+            }
+        },
+        {
+            "timestamp": "2025-06-08T05:13:32.566Z",
+            "content": "Risco CRÍTICO de inundação e danos estruturais identificado em Araguaína. Recomenda-se a evacuação imediata das áreas afetadas e monitoramento contínuo dos níveis de água.",
+            "riskLevel": "HIGH",
+            "location": {
+                "lat": -15.77972,
+                "lng": -47.92972
+            }
         }
-    } catch (error) {
-        console.error('Erro ao carregar relatórios salvos:', error);
+    ];
+
+    // Função para inicializar os dados
+    function initializeData() {
+        localStorage.setItem('watchtower_reports', JSON.stringify(initialReports));
+        savedReports = [...initialReports];
+        
+        // Limpa marcadores existentes
+        map.eachLayer((layer) => {
+            if (layer instanceof L.Marker) {
+                map.removeLayer(layer);
+            }
+        });
+
+        // Adiciona os marcadores iniciais
+        initialReports.forEach(report => {
+            const point = {
+                latitude: report.location.lat,
+                longitude: report.location.lng,
+                riskLevel: report.riskLevel,
+                aiAnalysis: report.content,
+                timestamp: report.timestamp
+            };
+            addMarker(point);
+        });
+
+        // Limpa e adiciona os reports
+        const reportsList = document.getElementById('reports-list');
+        reportsList.innerHTML = '';
+        initialReports.forEach(report => {
+            const point = {
+                id: report.timestamp, // Usando timestamp como ID
+                latitude: report.location.lat,
+                longitude: report.location.lng,
+                riskLevel: report.riskLevel,
+                aiAnalysis: report.content,
+                timestamp: report.timestamp
+            };
+            addReport(point);
+        });
     }
+
+    // Inicializa os dados se não existirem no localStorage
+    if (!localStorage.getItem('watchtower_reports')) {
+        initializeData();
+    } else {
+        try {
+            const savedData = JSON.parse(localStorage.getItem('watchtower_reports'));
+            if (!Array.isArray(savedData) || savedData.length === 0) {
+                initializeData();
+            } else {
+                savedReports = savedData;
+                savedData.forEach(report => {
+                    const point = {
+                        id: report.timestamp,
+                        latitude: report.location.lat,
+                        longitude: report.location.lng,
+                        riskLevel: report.riskLevel,
+                        aiAnalysis: report.content,
+                        timestamp: report.timestamp
+                    };
+                    addMarker(point);
+                    addReport(point);
+                });
+            }
+        } catch (e) {
+            console.error('Erro ao carregar dados do localStorage:', e);
+            initializeData();
+        }
+    }
+
+    connect();
 
 </script>
 
